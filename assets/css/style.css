@@ -1,0 +1,30 @@
+body{
+	width:100%;
+	background-color: #999;
+}
+
+.channel{
+	margin:0 auto;
+	border: 2px solid red;
+	width:200px;
+	float:left;
+	min-height: 600px;
+	height:auto;
+}
+
+.aux{
+	display:flex;
+	align-items: flex-end;
+	float:right;
+
+}
+
+.master{
+	display:flex;
+	align-items: flex-end;
+	float:right;
+}
+
+input{
+	margin: 0 auto;
+}

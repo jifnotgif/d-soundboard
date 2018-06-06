@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Virtual Soundboard</title>
+	<link rel="stylesheet" type="text/css" href="assets/css/style.css">
+</head>
+<body>
+	<div id="container">
+		<div class="channel">
+			<div class="input-source">
+				<select class="audio-in"> 
+					<option></option>
+					<option>sample sound</option>
+					<option>add new sample</option>
+				</select>
+				<p>Audio IN</p>
+			</div>
+
+			<div class ="gains">
+				<input class="gain-btn low-gain">
+				<p>Low Gain</p>
+
+				<input class="gain-btn med-gain">
+				<p>Med Gain</p>
+
+				<input class="gain-btn high-gain">
+				<p>High Gain</p>
+
+			</div>
+			
+			<div class="fades">
+				<input class="pan">
+				<p>Pan</p>
+
+				<input class="mute">
+				<p>Mute</p>
+
+				<input class="solo">
+				<p>Solo</p>
+
+
+				<input type="range" min="-100" max="100" value="50" class="fader-slider">
+
+			</div>
+		</div>
+
+		
+
+		<div class="channel master">
+			<input type="range" min="-100" max="100" value="50" class="fader-slider">
+			<p>Master Volume</p>
+		</div>
+		
+		<div class="channel aux">
+			<input type="range" min="-100" max="100" value="50" class="fader-slider">
+			<p>L</p>
+			<input type="range" min="-100" max="100" value="50" class="fader-slider">
+			<p>R</p>
+		</div>
+
+	</div>
+
+	<script type="text/javascript" src="assets/js/script.js"></script>
+</body>
+</html>
