@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+
+  	<meta charset="UTF-8">
 	<title>Virtual Soundboard</title>
 	<link rel="stylesheet" type="text/css" href="assets/css/style.css">
 </head>
@@ -10,7 +12,8 @@
 			<div class="input-source">
 				<select class="audio-in"> 
 					<option></option>
-					<option>sample sound</option>
+					<option value="assets/sounds/drum.mp3"> sample sound
+					</option>
 					<option>add new sample</option>
 				</select>
 				<p>Audio IN</p>
@@ -59,7 +62,8 @@
 		</div>
 
 	</div>
-
 	<script type="text/javascript" src="assets/js/script.js"></script>
+	<audio src="http://192.168.1.238:8080/assets/sounds/drum.mp3" crossorigin="anonymous"></audio>
+	<!-- "http://192.168.1.238:8080/assets/sounds/drum.mp3" -->
 </body>
 </html>
