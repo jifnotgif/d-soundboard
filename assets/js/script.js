@@ -7,7 +7,7 @@ var audioCtx = new AudioContext();
 var audioSource = document.getElementsByClassName("audio-in")[0];
 var panInput = document.querySelector(".pan");
 var muteInput = document.querySelector(".mute");
-
+var channelVolumeInput = document.querySelector(".channel-volume");
 // var audio = document.querySelector('audio');
 var panNode;
 var gainNode = audioCtx.createGain();
@@ -46,4 +46,12 @@ muteInput.addEventListener("click", function(){
 		gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
     	muteInput.id = "";
 	}
-})
+});
+
+channelVolumeInput.addEventListener("input", function(){
+	gainNode.gain.setValueAtTime( dBFSToGain(channelVolumeInput.value) , audioCtx.currentTime);
+});
+
+function dBFSToGain(dbfs) {
+  return Math.pow(10, dbfs / 20);
+}
