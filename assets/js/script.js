@@ -26,8 +26,10 @@ if(audioSource.options[audioSource.selectedIndex].value === "assets/sounds/drum.
 
 
 panInput.addEventListener("input", function(){
+	src.disconnect();
 	panNode = audioCtx.createStereoPanner();
 	panNode.pan.setValueAtTime( panInput.value ,audioCtx.currentTime);
+	// panNode.pan.value = panInput.value;
 	src.connect(panNode);
 	panNode.connect(audioCtx.destination);
 	audio.play();

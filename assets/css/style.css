@@ -6,12 +6,16 @@ body{
 .channel{
 	margin:0 auto;
 	border: 2px solid red;
-	width:200px;
+	width:175px;
 	float:left;
 	min-height: 600px;
 	height:auto;
+	position: relative;
 }
-
+.fades{
+	position: absolute;
+	bottom:0;
+}
 .aux{
 	display:flex;
 	align-items: flex-end;
