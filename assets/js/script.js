@@ -11,14 +11,29 @@ var channelVolumeInput = document.querySelector(".channel-volume");
 var initGainInput = document.querySelector(".gain");
 var hiEQ = document.querySelector(".high-gain");
 var loEQ = document.querySelector(".low-gain"); 
+var hi-midFreq = 
+var hi-midBoost = 
+var low-midFreq = 
+var low-midBoost = 
 // var audio = document.querySelector('audio');
-var panNode;
+var panNode = audioCtx.createStereoPanner();;
 var preAmp = audioCtx.createGain();
 var channelFader = audioCtx.createGain();
 var clipAnalyser = audioCtx.createAnalyser();
 clipAnalyser.minDecibels = -100;
 clipAnalyser.maxDecibels = -30;
-var EQControl = audioCtx.createBiquadFilter();
+var loEQControl = audioCtx.createBiquadFilter();
+loEQControl.type = "lowshelf";
+loEQControl.type = "lowshelf";
+var hiEQControl = audioCtx.createBiquadFilter();
+hiEQControl.type = "highshelf";
+hiEQControl.frequency.value = 12000;
+
+var hi-midEQControl = audioCtx.createBiquadFilter();
+hi-midEQControl.type = "peaking";
+var lo-midEQControl = audioCtx.createBiquadFilter();
+lo-midEQControl.type = "peaking";
+
 var src;
 var testArray = new Float32Array(clipAnalyser.frequencyBinCount);
 var meter;
@@ -30,16 +45,17 @@ audioSource.addEventListener("change", function(){
 
 // var volume = audioCtx.createGain();
 if(audioSource.options[audioSource.selectedIndex].value === "assets/sounds/drum.mp3"){
-		audio.src = "assets/sounds/piano.wav";
+		audio.src = "assets/sounds/drum.mp3";
 
 		src = audioCtx.createMediaElementSource(audio);
   	// 	gainNode.gain.value =0.1;
 
-  		src.connect(channelFader);
-  		// preAmp.connect(clipAnalyser);
-  		channelFader.connect(clipAnalyser);	
-  		clipAnalyser.connect(EQControl);
-  		EQControl.connect(audioCtx.destination);
+  		src.connect(preAmp);
+  		preAmp.connect(loEQControl);
+  		loEQControl.connect(hiEQControl);
+  		hiEQControl.connect(panNode);
+  		panNode.connect(channelFader);
+  		channelFader.connect(audioCtx.destination);	
 		// src.connect(channelFader)
 		//  meter = createAudioMeter(audioCtx);
 		// src.connect(meter);
@@ -62,12 +78,7 @@ if(audioSource.options[audioSource.selectedIndex].value === "assets/sounds/drum.
 
 
 panInput.addEventListener("input", function(){
-	src.disconnect();
-	panNode = audioCtx.createStereoPanner();
 	panNode.pan.setValueAtTime( panInput.value ,audioCtx.currentTime);
-	src.connect(panNode);
-	panNode.connect(channelFader);
-	channelFader.connect(audioCtx.destination);	
 	// audio.play();
 });
 
@@ -91,15 +102,13 @@ initGainInput.addEventListener("input", function(){
 });
 		
 hiEQ.addEventListener("input", function(){
-	EQControl.type = "highshelf";
-	EQControl.frequency.value = 12000;
-	EQControl.gain.value = dBFSToGain(hiEQ.value);
+	hiEQControl.gain.value = hiEQ.value;
 })
 
 loEQ.addEventListener("input", function(){
-	EQControl.type = "lowshelf";
-	EQControl.frequency.value = 80;
-	EQControl.gain.value = dBFSToGain(hiEQ.value);
+	
+	loEQControl.frequency.value = 80;
+	loEQControl.gain.value = loEQ.value;
 })
 
 
