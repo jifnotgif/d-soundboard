@@ -25,16 +25,34 @@
 					Gain
 				</label>
 
-
 				<label>
 					<input class="gain-btn high-gain" type="range" min="-15" max="15" step="1" value="0">
 					High Gain
 				</label>
+
+				<div class = "hi-mid-gain-control">
+					<label>
+						<input type="range" min="550" max="13000" value="7340.9" step ="1131.8" class="hm-freq-gain">
+
+						<input type="range" min="-15" max="15" value="0" step = "3" class="hm-boost-gain">
+						HI-MID
+					</label>
+				</div>
+				<div class = "lo-mid-gain-control">
+					<label>
+						<input type="range" min="80" max="1900" value="1070" step="165.5" class="lm-freq-gain">
+
+						<input type="range" min="-15" max="15" value="0" step ="3" class="lm-boost-gain">
+						LO-MID
+					</label>
+				</div>
 				<label>
-					<input class="gain-btn low-gain" type="range" min="-15" max="15" step="1" value="0">
+					<input class="gain-btn low-gain" type="range" min="-15" max="15" step="3" value="0">
 					Low Gain
 				</label>
-<!-- 
+
+
+<!-- 				
 				<label>
 					<input class="gain-btn med-gain" type="range" min="-1" max="1" step="0.1" value="0">
 					Med Gain
@@ -65,7 +83,7 @@
 					</label>
 				</div>
 
-				<input type="range" min="-75" max="100" value="0" step = "0.1" class="channel-volume">
+				<input type="range" min="-75" max="30" value="0" step = ".01" class="channel-volume">
 
 			</div>
 		</div>

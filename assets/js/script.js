@@ -11,28 +11,29 @@ var channelVolumeInput = document.querySelector(".channel-volume");
 var initGainInput = document.querySelector(".gain");
 var hiEQ = document.querySelector(".high-gain");
 var loEQ = document.querySelector(".low-gain"); 
-var hi-midFreq = 
-var hi-midBoost = 
-var low-midFreq = 
-var low-midBoost = 
-// var audio = document.querySelector('audio');
+var hi_midFreq = document.querySelector(".hm-freq-gain");
+var hi_midBoost = document.querySelector(".hm-boost-gain");
+var lo_midFreq = document.querySelector(".lm-freq-gain");
+var lo_midBoost = document.querySelector(".lm-boost-gain");
 var panNode = audioCtx.createStereoPanner();;
 var preAmp = audioCtx.createGain();
 var channelFader = audioCtx.createGain();
 var clipAnalyser = audioCtx.createAnalyser();
 clipAnalyser.minDecibels = -100;
 clipAnalyser.maxDecibels = -30;
+
+
 var loEQControl = audioCtx.createBiquadFilter();
 loEQControl.type = "lowshelf";
-loEQControl.type = "lowshelf";
+loEQControl.frequency.value = 80;
 var hiEQControl = audioCtx.createBiquadFilter();
 hiEQControl.type = "highshelf";
 hiEQControl.frequency.value = 12000;
 
-var hi-midEQControl = audioCtx.createBiquadFilter();
-hi-midEQControl.type = "peaking";
-var lo-midEQControl = audioCtx.createBiquadFilter();
-lo-midEQControl.type = "peaking";
+var hi_midEQControl = audioCtx.createBiquadFilter();
+hi_midEQControl.type = "peaking";
+var lo_midEQControl = audioCtx.createBiquadFilter();
+lo_midEQControl.type = "peaking";
 
 var src;
 var testArray = new Float32Array(clipAnalyser.frequencyBinCount);
@@ -51,9 +52,11 @@ if(audioSource.options[audioSource.selectedIndex].value === "assets/sounds/drum.
   	// 	gainNode.gain.value =0.1;
 
   		src.connect(preAmp);
-  		preAmp.connect(loEQControl);
-  		loEQControl.connect(hiEQControl);
-  		hiEQControl.connect(panNode);
+  		preAmp.connect(hiEQControl);
+  		hiEQControl.connect(hi_midEQControl);
+  		hi_midEQControl.connect(loEQControl);
+  		loEQControl.connect(lo_midEQControl);
+  		lo_midEQControl.connect(panNode);
   		panNode.connect(channelFader);
   		channelFader.connect(audioCtx.destination);	
 		// src.connect(channelFader)
@@ -106,12 +109,24 @@ hiEQ.addEventListener("input", function(){
 })
 
 loEQ.addEventListener("input", function(){
-	
-	loEQControl.frequency.value = 80;
 	loEQControl.gain.value = loEQ.value;
 })
 
+hi_midFreq.addEventListener("input", function(){
+	hi_midEQControl.frequency.value = hi_midFreq.value;
+})
 
+hi_midBoost.addEventListener("input", function(){
+	hi_midEQControl.gain.value = hi_midBoost.value;
+})
+
+lo_midFreq.addEventListener("input", function(){
+	lo_midEQControl.frequency.value = lo_midFreq.value;
+})
+
+lo_midBoost.addEventListener("input", function(){
+	lo_midEQControl.gain.value = lo_midBoost.value;
+})
 
 function dBFSToGain(dbfs) {
   return Math.pow(10, dbfs / 20);
