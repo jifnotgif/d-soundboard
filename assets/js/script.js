@@ -9,35 +9,55 @@ var panInput = document.querySelector(".pan");
 var muteInput = document.querySelector(".mute");
 var channelVolumeInput = document.querySelector(".channel-volume");
 var initGainInput = document.querySelector(".gain");
+var hiEQ = document.querySelector(".high-gain");
+var loEQ = document.querySelector(".low-gain"); 
 // var audio = document.querySelector('audio');
 var panNode;
 var preAmp = audioCtx.createGain();
 var channelFader = audioCtx.createGain();
 var clipAnalyser = audioCtx.createAnalyser();
+clipAnalyser.minDecibels = -100;
+clipAnalyser.maxDecibels = -30;
+var EQControl = audioCtx.createBiquadFilter();
 var src;
 var testArray = new Float32Array(clipAnalyser.frequencyBinCount);
+var meter;
+var canvasContext = document.getElementById( "meter" ).getContext("2d");
+var WIDTH=500;
+var HEIGHT=50;
+var rafID = null;
 audioSource.addEventListener("change", function(){
 
 // var volume = audioCtx.createGain();
 if(audioSource.options[audioSource.selectedIndex].value === "assets/sounds/drum.mp3"){
-		audio.src = "assets/sounds/drum.mp3";
+		audio.src = "assets/sounds/piano.wav";
 
 		src = audioCtx.createMediaElementSource(audio);
   	// 	gainNode.gain.value =0.1;
 
-  		src.connect(preAmp);
-  		preAmp.connect(clipAnalyser);
-  		clipAnalyser.connect(audioCtx.destination);
-
-
-
+  		src.connect(channelFader);
+  		// preAmp.connect(clipAnalyser);
+  		channelFader.connect(clipAnalyser);	
+  		clipAnalyser.connect(EQControl);
+  		EQControl.connect(audioCtx.destination);
 		// src.connect(channelFader)
+		//  meter = createAudioMeter(audioCtx);
+		// src.connect(meter);
 
+		//     // kick off the visual updating
+		// drawLoop();
 
 
  	//  	channelFader.connect(audioCtx.destination);	
 		audio.play();
-	}
+
+  		// var meter = audioCtx.createScriptProcessor(0, 1, 1);
+		// meter.onaudioprocess = function(e) { 
+ 	// 		clipAnalyser.getFloatFrequencyData(testArray);
+  // 			processAudio(testArray);
+  // 		};
+  // 		meter.connect(channelFader);
+	}	
 });
 
 
@@ -63,19 +83,65 @@ muteInput.addEventListener("click", function(){
 });
 
 channelVolumeInput.addEventListener("input", function(){
-	channelFader.gain.setValueAtTime( dBFSToGain(channelVolumeInput.value) , audioCtx.currentTime);
+	channelFader.gain.value = dBFSToGain(channelVolumeInput.value);
 });
 
 initGainInput.addEventListener("input", function(){
-	preAmp.gain.setValueAtTime( dBFSToGain(initGainInput.value) , audioCtx.currentTime);
+	preAmp.gain.value = dBFSToGain(initGainInput.value);
 });
 		
+hiEQ.addEventListener("input", function(){
+	EQControl.type = "highshelf";
+	EQControl.frequency.value = 12000;
+	EQControl.gain.value = dBFSToGain(hiEQ.value);
+})
 
-		audio.addEventListener("playing", function(){
- 			clipAnalyser.getFloatFrequencyData(testArray);
- 			console.log(testArray);
- 		});
+loEQ.addEventListener("input", function(){
+	EQControl.type = "lowshelf";
+	EQControl.frequency.value = 80;
+	EQControl.gain.value = dBFSToGain(hiEQ.value);
+})
+
+
 
 function dBFSToGain(dbfs) {
   return Math.pow(10, dbfs / 20);
+}
+
+function processAudio(arr){
+	checkClipping(arr);
+}
+
+// function checkClipping(buffer) {
+//   var isClipping = false;
+//   // Iterate through buffer to check if any of the |values| exceeds 1.
+//   for (var i = 0; i < buffer.length; i++) {
+//     var absValue = Math.abs(buffer[i] - clipAnalyser.minDecibels);
+//     if (absValue >= 1.0) {
+//       isClipping = true;
+//       x++;
+//       break;
+//     }
+//   }
+//   this.isClipping = isClipping;
+//   if (isClipping) {
+//     lastClipTime = new Date();
+//   }
+// }
+
+function drawLoop( time ) {
+    // clear the background
+    canvasContext.clearRect(0,0,WIDTH,HEIGHT);
+
+    // check if we're currently clipping
+    if (meter.checkClipping())
+        canvasContext.fillStyle = "red";
+    else
+        canvasContext.fillStyle = "green";
+
+    // draw a bar based on the current volume
+    canvasContext.fillRect(0, 0, meter.volume*WIDTH*1.4, HEIGHT);
+
+    // set up the next visual callback
+    rafID = window.requestAnimationFrame( drawLoop );
 }
