@@ -15,13 +15,16 @@ var hi_midFreq = document.querySelector(".hm-freq-gain");
 var hi_midBoost = document.querySelector(".hm-boost-gain");
 var lo_midFreq = document.querySelector(".lm-freq-gain");
 var lo_midBoost = document.querySelector(".lm-boost-gain");
-var panNode = audioCtx.createStereoPanner();;
+var panNode = audioCtx.createStereoPanner();
 var preAmp = audioCtx.createGain();
 var channelFader = audioCtx.createGain();
 var clipAnalyser = audioCtx.createAnalyser();
-clipAnalyser.minDecibels = -100;
-clipAnalyser.maxDecibels = -30;
+clipAnalyser.fftSize = 1024;
+var clipAnalyser2 = audioCtx.createAnalyser();
+clipAnalyser2.fftSize = 1024;
 
+var sourceNode,
+	splitter = audioCtx.createChannelSplitter();
 
 var loEQControl = audioCtx.createBiquadFilter();
 loEQControl.type = "lowshelf";
@@ -42,6 +45,17 @@ var canvasContext = document.getElementById( "meter" ).getContext("2d");
 var WIDTH=500;
 var HEIGHT=50;
 var rafID = null;
+
+var canvas = document.getElementById("meter").getContext("2d");
+
+var gradient = canvas.createLinearGradient(0, 0, 0, 130);
+	gradient.addColorStop(1, '#000000');
+	gradient.addColorStop(0.75, '#ff0000');
+	gradient.addColorStop(0.25, '#ffff00');
+	gradient.addColorStop(0, '#ffffff');
+
+var javascriptNode = audioCtx.createScriptProcessor(2048, 1, 1);
+var array, array2;
 audioSource.addEventListener("change", function(){
 
 // var volume = audioCtx.createGain();
@@ -55,10 +69,22 @@ if(audioSource.options[audioSource.selectedIndex].value === "assets/sounds/drum.
   		preAmp.connect(hiEQControl);
   		hiEQControl.connect(hi_midEQControl);
   		hi_midEQControl.connect(loEQControl);
-  		loEQControl.connect(lo_midEQControl);
+		loEQControl.connect(lo_midEQControl);
+		
+
   		lo_midEQControl.connect(panNode);
-  		panNode.connect(channelFader);
-  		channelFader.connect(audioCtx.destination);	
+		panNode.connect(channelFader);
+		panNode.connect(splitter);
+
+		splitter.connect(clipAnalyser, 0, 0);
+		splitter.connect(clipAnalyser2, 1, 0);
+		channelFader.connect(audioCtx.destination);	
+
+	// setup a javascript node
+	
+	// connect to destination, else it isn't called
+	javascriptNode.connect(splitter);  
+
 		// src.connect(channelFader)
 		//  meter = createAudioMeter(audioCtx);
 		// src.connect(meter);
@@ -136,6 +162,78 @@ function processAudio(arr){
 	checkClipping(arr);
 }
 
+
+javascriptNode.onaudioprocess = function () {
+
+	// get the average for the first channel
+	array = new Uint8Array(clipAnalyser.frequencyBinCount);
+	clipAnalyser.getByteFrequencyData(array);
+	var average = getAverageVolume(array);
+
+	// get the average for the second channel
+	array2 = new Uint8Array(clipAnalyser2.frequencyBinCount);
+	clipAnalyser2.getByteFrequencyData(array2);
+	var average2 = getAverageVolume(array2);
+
+	//here's the volume
+	// clear the current state
+	canvas.clearRect(0, 0, 60, 130);
+
+	// set the fill style
+	canvas.fillStyle = gradient;
+
+	// create the meters
+	canvas.fillRect(0, 130 - average, 25, 130);
+	canvas.fillRect(30, 130 - average2, 25, 130);
+}
+
+function getAverageVolume(array) {
+	var values = 0;
+	var average;
+
+	var length = array.length;
+
+	// get all the frequency amplitudes
+	for (var i = 0; i < length; i++) {
+		values += array[i];
+	}
+
+	average = values / length;
+	return average;
+}
+
+// function setupAudioNodes() {
+
+
+
+
+// 	// create a buffer source node
+// 	// don't create new buffer source, reuse created audio elemnt
+//     sourceNode = audioCtx.createBufferSource();
+// 	splitter = audioCtx.createChannelSplitter(2);
+
+// 	// connect the source to the analyser and the splitter
+// 	sourceNode.connect(splitter);
+
+// 	// connect one of the outputs from the splitter to
+// 	// the analyser
+// 	splitter.connect(clipAnalyser, 0, 0);
+// 	splitter.connect(clipAnalyser2, 1, 0);
+
+// 	// connect the splitter to the javascriptnode
+// 	// we use the javascript node to draw at a
+// 	// specific interval.
+// 	clipAnalyser.connect(javascriptNode);
+
+// 	//        splitter.connect(context.destination,0,0);
+// 	//        splitter.connect(context.destination,0,1);
+
+// 	// and connect to destination
+// 	sourceNode.connect(audioCtx.destination);
+
+	
+	
+// }
 // function checkClipping(buffer) {
 //   var isClipping = false;
 //   // Iterate through buffer to check if any of the |values| exceeds 1.
@@ -153,19 +251,19 @@ function processAudio(arr){
 //   }
 // }
 
-function drawLoop( time ) {
-    // clear the background
-    canvasContext.clearRect(0,0,WIDTH,HEIGHT);
+// function drawLoop( time ) {
+//     // clear the background
+//     canvasContext.clearRect(0,0,WIDTH,HEIGHT);
 
-    // check if we're currently clipping
-    if (meter.checkClipping())
-        canvasContext.fillStyle = "red";
-    else
-        canvasContext.fillStyle = "green";
+//     // check if we're currently clipping
+//     if (meter.checkClipping())
+//         canvasContext.fillStyle = "red";
+//     else
+//         canvasContext.fillStyle = "green";
 
-    // draw a bar based on the current volume
-    canvasContext.fillRect(0, 0, meter.volume*WIDTH*1.4, HEIGHT);
+//     // draw a bar based on the current volume
+//     canvasContext.fillRect(0, 0, meter.volume*WIDTH*1.4, HEIGHT);
 
-    // set up the next visual callback
-    rafID = window.requestAnimationFrame( drawLoop );
-}
+//     // set up the next visual callback
+//     rafID = window.requestAnimationFrame( drawLoop );
+// }
