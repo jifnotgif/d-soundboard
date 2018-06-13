@@ -10,7 +10,7 @@ var muteInput = document.querySelector(".mute");
 var channelVolumeInput = document.querySelector(".channel-volume");
 var initGainInput = document.querySelector(".gain");
 var hiEQ = document.querySelector(".high-gain");
-var loEQ = document.querySelector(".low-gain"); 
+var loEQ = document.querySelector(".low-gain");
 var hi_midFreq = document.querySelector(".hm-freq-gain");
 var hi_midBoost = document.querySelector(".hm-boost-gain");
 var lo_midFreq = document.querySelector(".lm-freq-gain");
@@ -41,98 +41,135 @@ lo_midEQControl.type = "peaking";
 var src;
 var testArray = new Float32Array(clipAnalyser.frequencyBinCount);
 var meter;
-var canvasContext = document.getElementById( "meter" ).getContext("2d");
+var canvasContext = document.getElementById("meter").getContext("2d");
 
 var canvas = document.getElementById("meter").getContext("2d");
 
 var gradient = canvas.createLinearGradient(0, 0, 0, 130);
-	gradient.addColorStop(1, '#00ff00');
-	gradient.addColorStop(0.4, '#ffff00');
-	gradient.addColorStop(0.05, '#ff0000');
+gradient.addColorStop(1, '#00ff00');
+gradient.addColorStop(0.4, '#ffff00');
+gradient.addColorStop(0.05, '#ff0000');
 
 var javascriptNode = audioCtx.createScriptProcessor(2048, 1, 1);
 var array, array2;
-audioSource.addEventListener("change", function(){
+audioSource.addEventListener("change", function () {
 
-		audio.src = audioSource.options[audioSource.selectedIndex].value;
+	// audio.src = audioSource.options[audioSource.selectedIndex].value;
+	source = audioCtx.createBufferSource();
+	var request = new XMLHttpRequest();
 
-		src = audioCtx.createMediaElementSource(audio);
+	request.open('GET', audioSource.options[audioSource.selectedIndex].value, true);
 
-  		src.connect(preAmp);
-  		preAmp.connect(hiEQControl);
-  		hiEQControl.connect(hi_midEQControl);
-  		hi_midEQControl.connect(loEQControl);
-		loEQControl.connect(lo_midEQControl);
-		
+	request.responseType = 'arraybuffer';
 
-  		lo_midEQControl.connect(panNode);
-		panNode.connect(channelFader);
 
-		channelFader.connect(audioCtx.destination);	
-		channelFader.connect(splitter);
-		splitter.connect(clipAnalyser, 0, 0);
-		splitter.connect(clipAnalyser2, 1, 0);
-		javascriptNode.connect(splitter);  
+	request.onload = function () {
+		var audioData = request.response;
 
-		audio.play();
+		audioCtx.decodeAudioData(audioData, function (buffer) {
+			source.buffer = buffer;
 
-	
+			source.connect(preAmp);
+			preAmp.connect(hiEQControl);
+			hiEQControl.connect(hi_midEQControl);
+			hi_midEQControl.connect(loEQControl);
+			loEQControl.connect(lo_midEQControl);
+
+
+			lo_midEQControl.connect(panNode);
+			panNode.connect(channelFader);
+
+			channelFader.connect(audioCtx.destination);
+			channelFader.connect(splitter);
+			splitter.connect(clipAnalyser, 0, 0);
+			splitter.connect(clipAnalyser2, 1, 0);
+			javascriptNode.connect(splitter);
+			source.loop = true;
+		},
+
+			function (e) { console.log("Error with decoding audio data" + e.err); });
+
+	}
+
+	request.send();
+	source.start(0);
+	// src = audioCtx.createMediaElementSource(audio);
+
+	// src.connect(preAmp);
+	// preAmp.connect(hiEQControl);
+	// hiEQControl.connect(hi_midEQControl);
+	// hi_midEQControl.connect(loEQControl);
+	// loEQControl.connect(lo_midEQControl);
+
+
+	// lo_midEQControl.connect(panNode);
+	// panNode.connect(channelFader);
+
+	// channelFader.connect(audioCtx.destination);
+	// channelFader.connect(splitter);
+	// splitter.connect(clipAnalyser, 0, 0);
+	// splitter.connect(clipAnalyser2, 1, 0);
+	// javascriptNode.connect(splitter);
+
+	// audio.start(0);
+
+
 });
 
 
-panInput.addEventListener("input", function(){
-	panNode.pan.setValueAtTime( panInput.value ,audioCtx.currentTime);
+panInput.addEventListener("input", function () {
+	panNode.pan.setValueAtTime(panInput.value, audioCtx.currentTime);
 	// audio.play();
 });
 
-muteInput.addEventListener("click", function(){
-	if(muteInput.id ==""){
+muteInput.addEventListener("click", function () {
+	if (muteInput.id == "") {
 		channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
-    	muteInput.id = "active";
+		muteInput.id = "active";
 	}
-	else{
+	else {
 		channelFader.gain.setValueAtTime(1, audioCtx.currentTime);
-    	muteInput.id = "";
+		muteInput.id = "";
 	}
 });
 
-channelVolumeInput.addEventListener("input", function(){
+channelVolumeInput.addEventListener("input", function () {
 	channelFader.gain.value = dBFSToGain(channelVolumeInput.value);
 });
 
-initGainInput.addEventListener("input", function(){
+initGainInput.addEventListener("input", function () {
 	preAmp.gain.value = dBFSToGain(initGainInput.value);
 });
-		
-hiEQ.addEventListener("input", function(){
+
+hiEQ.addEventListener("input", function () {
 	hiEQControl.gain.value = hiEQ.value;
 })
 
-loEQ.addEventListener("input", function(){
+loEQ.addEventListener("input", function () {
 	loEQControl.gain.value = loEQ.value;
 })
 
-hi_midFreq.addEventListener("input", function(){
+hi_midFreq.addEventListener("input", function () {
 	hi_midEQControl.frequency.value = hi_midFreq.value;
 })
 
-hi_midBoost.addEventListener("input", function(){
+hi_midBoost.addEventListener("input", function () {
 	hi_midEQControl.gain.value = hi_midBoost.value;
 })
 
-lo_midFreq.addEventListener("input", function(){
+lo_midFreq.addEventListener("input", function () {
 	lo_midEQControl.frequency.value = lo_midFreq.value;
 })
 
-lo_midBoost.addEventListener("input", function(){
+lo_midBoost.addEventListener("input", function () {
 	lo_midEQControl.gain.value = lo_midBoost.value;
 })
 
 function dBFSToGain(dbfs) {
-  return Math.pow(10, dbfs / 20);
+	return Math.pow(10, dbfs / 20);
 }
 
-function processAudio(arr){
+function processAudio(arr) {
 	checkClipping(arr);
 }
 
@@ -215,8 +252,8 @@ function getAverageVolume(array) {
 // 	// and connect to destination
 // 	sourceNode.connect(audioCtx.destination);
 
-	
-	
+
+
 // }
 // function checkClipping(buffer) {
 //   var isClipping = false;
