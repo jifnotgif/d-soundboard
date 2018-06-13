@@ -1,102 +1,152 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
-  	<meta charset="utf-8"/>
+	<meta charset="utf-8" />
 	<title>Virtual Soundboard</title>
 	<link rel="stylesheet" type="text/css" href="assets/css/style.css">
 </head>
+
 <body>
 	<div id="container">
 		<div class="channel">
 			<div class="input-source">
-				<select class="audio-in"> 
+				<select class="audio-in">
+					<option disabled selected value style="display:none">input source </option>
+					<option value="assets/sounds/drums.ogg"> drum sample </option>
+					<option value="assets/sounds/piano.wav"> piano sample </option>
+					<option value="new_file">upload new</option>
+				</select>
+				<p>Audio IN</p>
+			</div>
+
+			<div class="gains">
+				<label>
+					<input type="range" min="0" max="60" value="0" step="0.01" class="gain"> Gain
+				</label>
+
+				<label>
+					<input class="gain-btn high-gain" type="range" min="-15" max="15" step="1" value="0"> High Gain
+				</label>
+
+				<div class="hi-mid-gain-control">
+					<label>
+						<input type="range" min="550" max="13000" value="7340.9" step="1131.8" class="hm-freq-gain">
+
+						<input type="range" min="-15" max="15" value="0" step="3" class="hm-boost-gain"> HI-MID
+					</label>
+				</div>
+				<div class="lo-mid-gain-control">
+					<label>
+						<input type="range" min="80" max="1900" value="1070" step="165.5" class="lm-freq-gain">
+
+						<input type="range" min="-15" max="15" value="0" step="3" class="lm-boost-gain"> LO-MID
+					</label>
+				</div>
+				<label>
+					<input class="gain-btn low-gain" type="range" min="-15" max="15" step="3" value="0"> Low Gain
+				</label>
+
+			</div>
+
+			<div class="volume-meter">
+				<canvas id="meter" width="60" height="130" style="display: block;">
+				</canvas>
+			</div>
+
+			<div class="fades">
+
+				<label>
+					<input class="pan" type="range" min="-1" max="1" step="0.1" value="0"> Pan
+				</label>
+
+				<div class="clickable-buttons">
+					<label>
+						<input class="mute" type="button"> Mute
+					</label>
+
+					<label>
+						<input class="solo" type="button"> Solo
+					</label>
+				</div>
+
+				<input type="range" min="-75" max="30" value="0" step=".01" class="channel-volume">
+
+			</div>
+		</div>
+
+		<div class="channel">
+			<div class="input-source">
+				<select class="audio-in">
 					<option></option>
-					<option value="assets/sounds/drum.mp3"> sample sound
-					</option>
+					<option value="assets/sounds/drums.ogg"> drum sample </option>
+					<option value="assets/sounds/piano.wav"> piano sample </option>
 					<option>add new sample</option>
 				</select>
 				<p>Audio IN</p>
 			</div>
 
-			<div class ="gains">
+			<div class="gains">
 				<label>
-					<input type="range" min="0" max="60" value="0" step = "0.01" class="gain">
-					Gain
+					<input type="range" min="0" max="60" value="0" step="0.01" class="gain"> Gain
 				</label>
 
 				<label>
-					<input class="gain-btn high-gain" type="range" min="-15" max="15" step="1" value="0">
-					High Gain
+					<input class="gain-btn high-gain" type="range" min="-15" max="15" step="1" value="0"> High Gain
 				</label>
 
-				<div class = "hi-mid-gain-control">
+				<div class="hi-mid-gain-control">
 					<label>
-						<input type="range" min="550" max="13000" value="7340.9" step ="1131.8" class="hm-freq-gain">
+						<input type="range" min="550" max="13000" value="7340.9" step="1131.8" class="hm-freq-gain">
 
-						<input type="range" min="-15" max="15" value="0" step = "3" class="hm-boost-gain">
-						HI-MID
+						<input type="range" min="-15" max="15" value="0" step="3" class="hm-boost-gain"> HI-MID
 					</label>
 				</div>
-				<div class = "lo-mid-gain-control">
+				<div class="lo-mid-gain-control">
 					<label>
 						<input type="range" min="80" max="1900" value="1070" step="165.5" class="lm-freq-gain">
 
-						<input type="range" min="-15" max="15" value="0" step ="3" class="lm-boost-gain">
-						LO-MID
+						<input type="range" min="-15" max="15" value="0" step="3" class="lm-boost-gain"> LO-MID
 					</label>
 				</div>
 				<label>
-					<input class="gain-btn low-gain" type="range" min="-15" max="15" step="3" value="0">
-					Low Gain
+					<input class="gain-btn low-gain" type="range" min="-15" max="15" step="3" value="0"> Low Gain
 				</label>
 
-
-<!-- 				
-				<label>
-					<input class="gain-btn med-gain" type="range" min="-1" max="1" step="0.1" value="0">
-					Med Gain
-				</label> -->
-
-				<!-- FOUR MORE CONTROL KNOBS. 2 for freq, 2 for boost himid, lomid -->
 			</div>
 
-			<div class= "volume-meter">
+			<div class="volume-meter">
 				<canvas id="meter" width="60" height="130" style="display: block;">
 				</canvas>
 			</div>
-			
+
 			<div class="fades">
 
 				<label>
-					<input class="pan" type="range" min="-1" max="1" step="0.1" value="0">
-					Pan
+					<input class="pan" type="range" min="-1" max="1" step="0.1" value="0"> Pan
 				</label>
 
-				<div class="clickable-buttons">				
+				<div class="clickable-buttons">
 					<label>
-						<input class="mute" type="button">
-						Mute
+						<input class="mute" type="button"> Mute
 					</label>
 
 					<label>
-						<input class="solo" type="button">
-						Solo
+						<input class="solo" type="button"> Solo
 					</label>
 				</div>
 
-				<input type="range" min="-75" max="30" value="0" step = ".01" class="channel-volume">
+				<input type="range" min="-75" max="30" value="0" step=".01" class="channel-volume">
 
 			</div>
 		</div>
-
-		
 
 		<div class="channel master">
 			<input type="range" min="-100" max="100" value="50" class="fader-slider">
 			<p>Master Volume</p>
 		</div>
-		
+
 		<div class="channel aux">
 			<input type="range" min="-100" max="100" value="50" class="fader-slider">
 			<p>L</p>
@@ -105,8 +155,10 @@
 		</div>
 
 	</div>
+
 	<!-- <div id="audio"></div> -->
 	<!-- <script type="text/javascript" src="assets/js/volume-meter.js"></script> -->
 	<script type="text/javascript" src="assets/js/script.js"></script>
 </body>
+
 </html>

@@ -42,28 +42,21 @@ var src;
 var testArray = new Float32Array(clipAnalyser.frequencyBinCount);
 var meter;
 var canvasContext = document.getElementById( "meter" ).getContext("2d");
-var WIDTH=500;
-var HEIGHT=50;
-var rafID = null;
 
 var canvas = document.getElementById("meter").getContext("2d");
 
 var gradient = canvas.createLinearGradient(0, 0, 0, 130);
-	gradient.addColorStop(1, '#000000');
-	gradient.addColorStop(0.75, '#ff0000');
-	gradient.addColorStop(0.25, '#ffff00');
-	gradient.addColorStop(0, '#ffffff');
+	gradient.addColorStop(1, '#00ff00');
+	gradient.addColorStop(0.4, '#ffff00');
+	gradient.addColorStop(0.05, '#ff0000');
 
 var javascriptNode = audioCtx.createScriptProcessor(2048, 1, 1);
 var array, array2;
 audioSource.addEventListener("change", function(){
 
-// var volume = audioCtx.createGain();
-if(audioSource.options[audioSource.selectedIndex].value === "assets/sounds/drum.mp3"){
-		audio.src = "assets/sounds/drum.mp3";
+		audio.src = audioSource.options[audioSource.selectedIndex].value;
 
 		src = audioCtx.createMediaElementSource(audio);
-  	// 	gainNode.gain.value =0.1;
 
   		src.connect(preAmp);
   		preAmp.connect(hiEQControl);
@@ -74,35 +67,16 @@ if(audioSource.options[audioSource.selectedIndex].value === "assets/sounds/drum.
 
   		lo_midEQControl.connect(panNode);
 		panNode.connect(channelFader);
-		panNode.connect(splitter);
 
+		channelFader.connect(audioCtx.destination);	
+		channelFader.connect(splitter);
 		splitter.connect(clipAnalyser, 0, 0);
 		splitter.connect(clipAnalyser2, 1, 0);
-		channelFader.connect(audioCtx.destination);	
+		javascriptNode.connect(splitter);  
 
-	// setup a javascript node
-	
-	// connect to destination, else it isn't called
-	javascriptNode.connect(splitter);  
-
-		// src.connect(channelFader)
-		//  meter = createAudioMeter(audioCtx);
-		// src.connect(meter);
-
-		//     // kick off the visual updating
-		// drawLoop();
-
-
- 	//  	channelFader.connect(audioCtx.destination);	
 		audio.play();
 
-  		// var meter = audioCtx.createScriptProcessor(0, 1, 1);
-		// meter.onaudioprocess = function(e) { 
- 	// 		clipAnalyser.getFloatFrequencyData(testArray);
-  // 			processAudio(testArray);
-  // 		};
-  // 		meter.connect(channelFader);
-	}	
+	
 });
 
 
@@ -183,8 +157,18 @@ javascriptNode.onaudioprocess = function () {
 	canvas.fillStyle = gradient;
 
 	// create the meters
-	canvas.fillRect(0, 130 - average, 25, 130);
-	canvas.fillRect(30, 130 - average2, 25, 130);
+	if (average < 130) {
+		canvas.fillRect(0, 130 - average, 25, 130);
+	}
+	else {
+		canvas.fillRect(0, 0, 25, 130);
+	}
+	if (average2 < 130) {
+		canvas.fillRect(30, 130 - average2, 25, 130);
+	}
+	else {
+		canvas.fillRect(30, 0, 25, 130);
+	}
 }
 
 function getAverageVolume(array) {
@@ -195,7 +179,7 @@ function getAverageVolume(array) {
 
 	// get all the frequency amplitudes
 	for (var i = 0; i < length; i++) {
-		values += array[i];
+		values += Math.abs(array[i]);
 	}
 
 	average = values / length;
