@@ -15,7 +15,7 @@ var hi_midFreq = document.querySelectorAll(".hm-freq-gain");
 var hi_midBoost = document.querySelectorAll(".hm-boost-gain");
 var lo_midFreq = document.querySelectorAll(".lm-freq-gain");
 var lo_midBoost = document.querySelectorAll(".lm-boost-gain");
-
+var masterVolumeIn = document.querySelector("#master-volume");
 var channels = [], sources = [];
 var masterChannel = audioCtx.createGain();
 
@@ -192,13 +192,13 @@ function setKnobControlListeners(){
 
 	muteInput.forEach(function (input, i) {
 		input.addEventListener("click", function () {
-			if (input.id == "") {
-				channels[i].channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
-				input.id = "active";
+			if (input.classList.contains("active")) {
+				channels[i].channelFader.gain.setValueAtTime(1, audioCtx.currentTime);
+				input.classList.remove("active");
 			}
 			else {
-				channels[i].channelFader.gain.setValueAtTime(1, audioCtx.currentTime);
-				input.id = "";
+				channels[i].channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
+				input.classList.add("active");
 			}
 		});
 	});
@@ -249,5 +249,9 @@ function setKnobControlListeners(){
 		input.addEventListener("input", function () {
 			channels[i].lo_midEQControl.gain.value = lo_midBoost[i].value;
 		})
+	});
+
+	masterVolumeIn.addEventListener("input", function(){
+		masterChannel.gain.value = dBFSToGain(masterVolumeIn.value);
 	});
 }

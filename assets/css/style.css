@@ -31,4 +31,15 @@ body{
 
 input{
 	margin: 0 auto;
+
+}
+
+.mute{
+	height:25px;
+	width:25px;
+	display: inline-block;
+	vertical-align: top;
+}
+.active{
+	background-color: red;
 }
