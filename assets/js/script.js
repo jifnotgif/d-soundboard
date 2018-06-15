@@ -148,6 +148,7 @@ function initializeAudio(i) {
 		sources[i].stop();
 		sources.splice(sources.indexOf(sources[i]), 1);
 	}
+
 	var source = audioCtx.createBufferSource();
 
 	sources.splice(i, 0, source);
@@ -193,53 +194,71 @@ function initializeAudio(i) {
 }
 
 
-panInput.addEventListener("input", function () {
-	panNode.pan.setValueAtTime(panInput.value, audioCtx.currentTime);
-	// audio.play();
+panInput.forEach(function(input, i){
+	input.addEventListener("input", function () {
+		channels[i].panNode.pan.setValueAtTime(input.value, audioCtx.currentTime);
+	});
+});
+muteInput.forEach(function(input, i){
+	input.addEventListener("click", function () {
+		if (input.id == "") {
+			channels[i].channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
+			input.id = "active";
+		}
+		else {
+			channels[i].channelFader.gain.setValueAtTime(1, audioCtx.currentTime);
+			input.id = "";
+		}
+	});
 });
 
-muteInput.addEventListener("click", function () {
-	if (muteInput.id == "") {
-		channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
-		muteInput.id = "active";
-	}
-	else {
-		channelFader.gain.setValueAtTime(1, audioCtx.currentTime);
-		muteInput.id = "";
-	}
+channelVolumeInput.forEach(function(input,i){
+	input.addEventListener("input", function () {
+		channels[i].channelFader.gain.value = dBFSToGain(channelVolumeInput.value);
+	});
 });
 
-channelVolumeInput.addEventListener("input", function () {
-	channelFader.gain.value = dBFSToGain(channelVolumeInput.value);
+initGainInput.forEach(function (input, i) { 
+	input.addEventListener("input", function () {
+		channels[i].preAmp.gain.value = dBFSToGain(initGainInput.value);
+	})
 });
 
-initGainInput.addEventListener("input", function () {
-	preAmp.gain.value = dBFSToGain(initGainInput.value);
+hiEQ.forEach(function (input, i) {
+	input.addEventListener("input", function () {
+		channels[i].hiEQControl.gain.value = hiEQ.value;
+	})
 });
 
-hiEQ.addEventListener("input", function () {
-	hiEQControl.gain.value = hiEQ.value;
-})
+loEQ.forEach(function(input,i){
+	input.addEventListener("input", function () {
+		channels[i].loEQControl.gain.value = loEQ.value;
+	})
+});
 
-loEQ.addEventListener("input", function () {
-	loEQControl.gain.value = loEQ.value;
-})
+hi_midFreq.forEach(function (input, i) {
+	input.addEventListener("input", function () {
+		channels[i].hi_midEQControl.frequency.value = hi_midFreq.value;
+	})
+ });
 
-hi_midFreq.addEventListener("input", function () {
-	hi_midEQControl.frequency.value = hi_midFreq.value;
-})
+hi_midBoost.forEach(function (input, i) { 
+	input.addEventListener("input", function () {
+		channels[i].hi_midEQControl.gain.value = hi_midBoost.value;
+	})
+});
 
-hi_midBoost.addEventListener("input", function () {
-	hi_midEQControl.gain.value = hi_midBoost.value;
-})
+lo_midFreq.forEach(function (input, i) { 
+	input.addEventListener("input", function () {
+		channels[i].lo_midEQControl.frequency.value = lo_midFreq.value;
+	})
+});
 
-lo_midFreq.addEventListener("input", function () {
-	lo_midEQControl.frequency.value = lo_midFreq.value;
-})
-
-lo_midBoost.addEventListener("input", function () {
-	lo_midEQControl.gain.value = lo_midBoost.value;
-})
+lo_midBoost.forEach(function (input, i) { 
+	input.addEventListener("input", function () {
+		channels[i].lo_midEQControl.gain.value = lo_midBoost.value;
+	})
+});
 
 function dBFSToGain(dbfs) {
 	return Math.pow(10, dbfs / 20);
