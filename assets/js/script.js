@@ -63,9 +63,12 @@ audioSources.forEach(function (element, index) {
 });
 
 function addChannel(index){
-	var newChannel = new Object();
-	setChannelProperties(newChannel, index);
-	channels.push(newChannel);
+	if (channels[index] == null) {
+		var newChannel = new Object();
+		setChannelProperties(newChannel, index);
+		channels[index] = newChannel;
+	}
+
 }
 function setChannelProperties(channel, i){
 	channel.panNode = audioCtx.createStereoPanner();
@@ -141,8 +144,13 @@ function setChannelProperties(channel, i){
 }
 
 function initializeAudio(i) {
+	if(	sources[i]){
+		sources[i].stop();
+		sources.splice(sources.indexOf(sources[i]), 1);
+	}
 	var source = audioCtx.createBufferSource();
-	sources.push(source);
+
+	sources.splice(i, 0, source);
 
 	var request = new XMLHttpRequest();
 	request.open('GET', audioSources[i].options[audioSources[i].selectedIndex].value, true);
