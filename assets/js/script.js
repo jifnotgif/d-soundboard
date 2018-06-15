@@ -18,40 +18,6 @@ var lo_midBoost = document.querySelectorAll(".lm-boost-gain");
 
 var channels = [], sources = [];
 var masterChannel = audioCtx.createGain();
-// // var panNode = audioCtx.createStereoPanner();
-// var preAmp = audioCtx.createGain();
-// var channelFader = audioCtx.createGain();
-// var clipAnalyser = audioCtx.createAnalyser();
-// clipAnalyser.fftSize = 1024;
-// var clipAnalyser2 = audioCtx.createAnalyser();
-// clipAnalyser2.fftSize = 1024;
-
-// var splitter = audioCtx.createChannelSplitter();
-
-// var loEQControl = audioCtx.createBiquadFilter();
-// loEQControl.type = "lowshelf";
-// loEQControl.frequency.value = 80;
-// var hiEQControl = audioCtx.createBiquadFilter();
-// hiEQControl.type = "highshelf";
-// hiEQControl.frequency.value = 12000;
-
-// var hi_midEQControl = audioCtx.createBiquadFilter();
-// hi_midEQControl.type = "peaking";
-// var lo_midEQControl = audioCtx.createBiquadFilter();
-// lo_midEQControl.type = "peaking";
-
-// var meter;
-// var canvasContext = document.getElementById("meter").getContext("2d");
-
-// var canvas = document.getElementById("meter").getContext("2d");
-
-// var gradient = canvas.createLinearGradient(0, 0, 0, 130);
-// gradient.addColorStop(1, '#00ff00');
-// gradient.addColorStop(0.4, '#ffff00');
-// gradient.addColorStop(0.05, '#ff0000');
-
-// var javascriptNode = audioCtx.createScriptProcessor(2048, 1, 1);
-// var array, array2;
 
 audioSources.forEach(function (element, index) {
 	element.addEventListener("change", function () {
@@ -61,6 +27,8 @@ audioSources.forEach(function (element, index) {
 		initializeAudio(index);
 	});
 });
+
+setKnobControlListeners();
 
 function addChannel(index){
 	if (channels[index] == null) {
@@ -194,78 +162,9 @@ function initializeAudio(i) {
 }
 
 
-panInput.forEach(function(input, i){
-	input.addEventListener("input", function () {
-		channels[i].panNode.pan.setValueAtTime(input.value, audioCtx.currentTime);
-	});
-});
-muteInput.forEach(function(input, i){
-	input.addEventListener("click", function () {
-		if (input.id == "") {
-			channels[i].channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
-			input.id = "active";
-		}
-		else {
-			channels[i].channelFader.gain.setValueAtTime(1, audioCtx.currentTime);
-			input.id = "";
-		}
-	});
-});
-
-channelVolumeInput.forEach(function(input,i){
-	input.addEventListener("input", function () {
-		channels[i].channelFader.gain.value = dBFSToGain(channelVolumeInput.value);
-	});
-});
-
-initGainInput.forEach(function (input, i) { 
-	input.addEventListener("input", function () {
-		channels[i].preAmp.gain.value = dBFSToGain(initGainInput.value);
-	})
-});
-
-hiEQ.forEach(function (input, i) {
-	input.addEventListener("input", function () {
-		channels[i].hiEQControl.gain.value = hiEQ.value;
-	})
-});
-
-loEQ.forEach(function(input,i){
-	input.addEventListener("input", function () {
-		channels[i].loEQControl.gain.value = loEQ.value;
-	})
-});
-
-hi_midFreq.forEach(function (input, i) {
-	input.addEventListener("input", function () {
-		channels[i].hi_midEQControl.frequency.value = hi_midFreq.value;
-	})
- });
-
-hi_midBoost.forEach(function (input, i) { 
-	input.addEventListener("input", function () {
-		channels[i].hi_midEQControl.gain.value = hi_midBoost.value;
-	})
-});
-
-lo_midFreq.forEach(function (input, i) { 
-	input.addEventListener("input", function () {
-		channels[i].lo_midEQControl.frequency.value = lo_midFreq.value;
-	})
-});
-
-lo_midBoost.forEach(function (input, i) { 
-	input.addEventListener("input", function () {
-		channels[i].lo_midEQControl.gain.value = lo_midBoost.value;
-	})
-});
 
 function dBFSToGain(dbfs) {
 	return Math.pow(10, dbfs / 20);
-}
-
-function processAudio(arr) {
-	checkClipping(arr);
 }
 
 function getAverageVolume(array) {
@@ -281,4 +180,74 @@ function getAverageVolume(array) {
 
 	average = values / length;
 	return average;
+}
+
+function setKnobControlListeners(){
+
+	panInput.forEach(function (input, i) {
+		input.addEventListener("input", function () {
+			channels[i].panNode.pan.setValueAtTime(input.value, audioCtx.currentTime);
+		});
+	});
+
+	muteInput.forEach(function (input, i) {
+		input.addEventListener("click", function () {
+			if (input.id == "") {
+				channels[i].channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
+				input.id = "active";
+			}
+			else {
+				channels[i].channelFader.gain.setValueAtTime(1, audioCtx.currentTime);
+				input.id = "";
+			}
+		});
+	});
+
+	channelVolumeInput.forEach(function (input, i) {
+		input.addEventListener("input", function () {
+			channels[i].channelFader.gain.value = dBFSToGain(channelVolumeInput[i].value);
+		});
+	});
+
+	initGainInput.forEach(function (input, i) {
+		input.addEventListener("input", function () {
+			channels[i].preAmp.gain.value = dBFSToGain(initGainInput[i].value);
+		})
+	});
+
+	hiEQ.forEach(function (input, i) {
+		input.addEventListener("input", function () {
+			channels[i].hiEQControl.gain.value = hiEQ[i].value;
+		})
+	});
+
+	loEQ.forEach(function (input, i) {
+		input.addEventListener("input", function () {
+			channels[i].loEQControl.gain.value = loEQ[i].value;
+		})
+	});
+
+	hi_midFreq.forEach(function (input, i) {
+		input.addEventListener("input", function () {
+			channels[i].hi_midEQControl.frequency.value = hi_midFreq[i].value;
+		})
+	});
+
+	hi_midBoost.forEach(function (input, i) {
+		input.addEventListener("input", function () {
+			channels[i].hi_midEQControl.gain.value = hi_midBoost[i].value;
+		})
+	});
+
+	lo_midFreq.forEach(function (input, i) {
+		input.addEventListener("input", function () {
+			channels[i].lo_midEQControl.frequency.value = lo_midFreq[i].value;
+		})
+	});
+
+	lo_midBoost.forEach(function (input, i) {
+		input.addEventListener("input", function () {
+			channels[i].lo_midEQControl.gain.value = lo_midBoost[i].value;
+		})
+	});
 }
