@@ -1,64 +1,114 @@
 
 // window.addEventListener('load', init, false);
 
-var audio = new Audio();
 var AudioContext = window.AudioContext || window.webkitAudioContext;
 var audioCtx = new AudioContext();
-var audioSource = document.getElementsByClassName("audio-in")[0];
-var panInput = document.querySelector(".pan");
-var muteInput = document.querySelector(".mute");
-var channelVolumeInput = document.querySelector(".channel-volume");
-var initGainInput = document.querySelector(".gain");
-var hiEQ = document.querySelector(".high-gain");
-var loEQ = document.querySelector(".low-gain");
-var hi_midFreq = document.querySelector(".hm-freq-gain");
-var hi_midBoost = document.querySelector(".hm-boost-gain");
-var lo_midFreq = document.querySelector(".lm-freq-gain");
-var lo_midBoost = document.querySelector(".lm-boost-gain");
-var panNode = audioCtx.createStereoPanner();
-var preAmp = audioCtx.createGain();
-var channelFader = audioCtx.createGain();
-var clipAnalyser = audioCtx.createAnalyser();
-clipAnalyser.fftSize = 1024;
-var clipAnalyser2 = audioCtx.createAnalyser();
-clipAnalyser2.fftSize = 1024;
+var audioSources = document.querySelectorAll(".audio-in");
 
-var sourceNode,
-	splitter = audioCtx.createChannelSplitter();
+var panInput = document.querySelectorAll(".pan");
+var muteInput = document.querySelectorAll(".mute");
+var channelVolumeInput = document.querySelectorAll(".channel-volume");
+var initGainInput = document.querySelectorAll(".gain");
+var hiEQ = document.querySelectorAll(".high-gain");
+var loEQ = document.querySelectorAll(".low-gain");
+var hi_midFreq = document.querySelectorAll(".hm-freq-gain");
+var hi_midBoost = document.querySelectorAll(".hm-boost-gain");
+var lo_midFreq = document.querySelectorAll(".lm-freq-gain");
+var lo_midBoost = document.querySelectorAll(".lm-boost-gain");
 
-var loEQControl = audioCtx.createBiquadFilter();
-loEQControl.type = "lowshelf";
-loEQControl.frequency.value = 80;
-var hiEQControl = audioCtx.createBiquadFilter();
-hiEQControl.type = "highshelf";
-hiEQControl.frequency.value = 12000;
+var channels = [], sources = [];
 
-var hi_midEQControl = audioCtx.createBiquadFilter();
-hi_midEQControl.type = "peaking";
-var lo_midEQControl = audioCtx.createBiquadFilter();
-lo_midEQControl.type = "peaking";
+// // var panNode = audioCtx.createStereoPanner();
+// var preAmp = audioCtx.createGain();
+// var channelFader = audioCtx.createGain();
+// var clipAnalyser = audioCtx.createAnalyser();
+// clipAnalyser.fftSize = 1024;
+// var clipAnalyser2 = audioCtx.createAnalyser();
+// clipAnalyser2.fftSize = 1024;
 
-var src;
-var testArray = new Float32Array(clipAnalyser.frequencyBinCount);
-var meter;
-var canvasContext = document.getElementById("meter").getContext("2d");
+// var splitter = audioCtx.createChannelSplitter();
 
-var canvas = document.getElementById("meter").getContext("2d");
+// var loEQControl = audioCtx.createBiquadFilter();
+// loEQControl.type = "lowshelf";
+// loEQControl.frequency.value = 80;
+// var hiEQControl = audioCtx.createBiquadFilter();
+// hiEQControl.type = "highshelf";
+// hiEQControl.frequency.value = 12000;
 
-var gradient = canvas.createLinearGradient(0, 0, 0, 130);
-gradient.addColorStop(1, '#00ff00');
-gradient.addColorStop(0.4, '#ffff00');
-gradient.addColorStop(0.05, '#ff0000');
+// var hi_midEQControl = audioCtx.createBiquadFilter();
+// hi_midEQControl.type = "peaking";
+// var lo_midEQControl = audioCtx.createBiquadFilter();
+// lo_midEQControl.type = "peaking";
 
-var javascriptNode = audioCtx.createScriptProcessor(2048, 1, 1);
-var array, array2;
-audioSource.addEventListener("change", function () {
+// var meter;
+// var canvasContext = document.getElementById("meter").getContext("2d");
 
-	// audio.src = audioSource.options[audioSource.selectedIndex].value;
-	source = audioCtx.createBufferSource();
+// var canvas = document.getElementById("meter").getContext("2d");
+
+// var gradient = canvas.createLinearGradient(0, 0, 0, 130);
+// gradient.addColorStop(1, '#00ff00');
+// gradient.addColorStop(0.4, '#ffff00');
+// gradient.addColorStop(0.05, '#ff0000');
+
+// var javascriptNode = audioCtx.createScriptProcessor(2048, 1, 1);
+// var array, array2;
+
+audioSources.forEach(function (element, i) {
+	element.addEventListener("change", function () {
+		// add new channel object to list
+		addChannel(i);
+		initializeAudio(i);
+	});
+});
+
+function addChannel(index){
+	var newChannel = new Object();
+	setChannelProperties(newChannel, index);
+	channels.push(newChannel);
+}
+function setChannelProperties(channel, i){
+	channel.panNode = audioCtx.createStereoPanner();
+	channel.preAmp = audioCtx.createGain();
+	channel.channelFader = audioCtx.createGain();
+	channel.clipAnalyser = audioCtx.createAnalyser();
+	channel.clipAnalyser.fftSize = 1024;
+	channel.clipAnalyser2 = audioCtx.createAnalyser();
+	channel.clipAnalyser2.fftSize = 1024;
+
+	channel.splitter = audioCtx.createChannelSplitter();
+
+	channel.loEQControl = audioCtx.createBiquadFilter();
+	channel.loEQControl.type = "lowshelf";
+	channel.loEQControl.frequency.value = 80;
+	channel.hiEQControl = audioCtx.createBiquadFilter();
+	channel.hiEQControl.type = "highshelf";
+	channel.hiEQControl.frequency.value = 12000;
+
+	channel.hi_midEQControl = audioCtx.createBiquadFilter();
+	channel.hi_midEQControl.type = "peaking";
+	channel.lo_midEQControl = audioCtx.createBiquadFilter();
+	channel.lo_midEQControl.type = "peaking";
+
+	channel.meter;
+	channel.canvasContext = document.querySelectorAll(".meter")[i].getContext("2d");
+
+	channel.canvas = document.querySelectorAll(".meter")[i].getContext("2d");
+
+	channel.gradient = canvas.createLinearGradient(0, 0, 0, 130);
+	channel.gradient.addColorStop(1, '#00ff00');
+	channel.gradient.addColorStop(0.4, '#ffff00');
+	channel.gradient.addColorStop(0.05, '#ff0000');
+
+	channel.javascriptNode = audioCtx.createScriptProcessor(2048, 1, 1);
+	channel.array;
+	channel.array2;
+}
+
+function initializeAudio(index) {
+	var source = audioCtx.createBufferSource();
+	sources.push(source);
 	var request = new XMLHttpRequest();
-
-	request.open('GET', audioSource.options[audioSource.selectedIndex].value, true);
+	request.open('GET', audioSources[index].options[audioSources[index].selectedIndex].value, true);
 
 	request.responseType = 'arraybuffer';
 
@@ -67,24 +117,26 @@ audioSource.addEventListener("change", function () {
 		var audioData = request.response;
 
 		audioCtx.decodeAudioData(audioData, function (buffer) {
-			source.buffer = buffer;
+			sources.forEach(function(s, index){
+				s.buffer = buffer;
 
-			source.connect(preAmp);
-			preAmp.connect(hiEQControl);
-			hiEQControl.connect(hi_midEQControl);
-			hi_midEQControl.connect(loEQControl);
-			loEQControl.connect(lo_midEQControl);
+				s.connect(preAmp);
+				preAmp.connect(hiEQControl);
+				hiEQControl.connect(hi_midEQControl);
+				hi_midEQControl.connect(loEQControl);
+				loEQControl.connect(lo_midEQControl);
 
 
-			lo_midEQControl.connect(panNode);
-			panNode.connect(channelFader);
+				lo_midEQControl.connect(panNode);
+				panNode.connect(channelFader);
 
-			channelFader.connect(audioCtx.destination);
-			channelFader.connect(splitter);
-			splitter.connect(clipAnalyser, 0, 0);
-			splitter.connect(clipAnalyser2, 1, 0);
-			javascriptNode.connect(splitter);
-			source.loop = true;
+				channelFader.connect(audioCtx.destination);
+				channelFader.connect(splitter);
+				splitter.connect(clipAnalyser, 0, 0);
+				splitter.connect(clipAnalyser2, 1, 0);
+				javascriptNode.connect(splitter);
+				s.loop = true;
+			});
 		},
 
 			function (e) { console.log("Error with decoding audio data" + e.err); });
@@ -93,28 +145,7 @@ audioSource.addEventListener("change", function () {
 
 	request.send();
 	source.start(0);
-	// src = audioCtx.createMediaElementSource(audio);
-
-	// src.connect(preAmp);
-	// preAmp.connect(hiEQControl);
-	// hiEQControl.connect(hi_midEQControl);
-	// hi_midEQControl.connect(loEQControl);
-	// loEQControl.connect(lo_midEQControl);
-
-
-	// lo_midEQControl.connect(panNode);
-	// panNode.connect(channelFader);
-
-	// channelFader.connect(audioCtx.destination);
-	// channelFader.connect(splitter);
-	// splitter.connect(clipAnalyser, 0, 0);
-	// splitter.connect(clipAnalyser2, 1, 0);
-	// javascriptNode.connect(splitter);
-
-	// audio.start(0);
-
-
-});
+}
 
 
 panInput.addEventListener("input", function () {
@@ -222,69 +253,3 @@ function getAverageVolume(array) {
 	average = values / length;
 	return average;
 }
-
-// function setupAudioNodes() {
-
-
-
-
-// 	// create a buffer source node
-// 	// don't create new buffer source, reuse created audio elemnt
-//     sourceNode = audioCtx.createBufferSource();
-// 	splitter = audioCtx.createChannelSplitter(2);
-
-// 	// connect the source to the analyser and the splitter
-// 	sourceNode.connect(splitter);
-
-// 	// connect one of the outputs from the splitter to
-// 	// the analyser
-// 	splitter.connect(clipAnalyser, 0, 0);
-// 	splitter.connect(clipAnalyser2, 1, 0);
-
-// 	// connect the splitter to the javascriptnode
-// 	// we use the javascript node to draw at a
-// 	// specific interval.
-// 	clipAnalyser.connect(javascriptNode);
-
-// 	//        splitter.connect(context.destination,0,0);
-// 	//        splitter.connect(context.destination,0,1);
-
-// 	// and connect to destination
-// 	sourceNode.connect(audioCtx.destination);
-
-
-
-// }
-// function checkClipping(buffer) {
-//   var isClipping = false;
-//   // Iterate through buffer to check if any of the |values| exceeds 1.
-//   for (var i = 0; i < buffer.length; i++) {
-//     var absValue = Math.abs(buffer[i] - clipAnalyser.minDecibels);
-//     if (absValue >= 1.0) {
-//       isClipping = true;
-//       x++;
-//       break;
-//     }
-//   }
-//   this.isClipping = isClipping;
-//   if (isClipping) {
-//     lastClipTime = new Date();
-//   }
-// }
-
-// function drawLoop( time ) {
-//     // clear the background
-//     canvasContext.clearRect(0,0,WIDTH,HEIGHT);
-
-//     // check if we're currently clipping
-//     if (meter.checkClipping())
-//         canvasContext.fillStyle = "red";
-//     else
-//         canvasContext.fillStyle = "green";
-
-//     // draw a bar based on the current volume
-//     canvasContext.fillRect(0, 0, meter.volume*WIDTH*1.4, HEIGHT);
-
-//     // set up the next visual callback
-//     rafID = window.requestAnimationFrame( drawLoop );
-// }
