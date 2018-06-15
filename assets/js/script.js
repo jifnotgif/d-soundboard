@@ -53,11 +53,12 @@ var channels = [], sources = [];
 // var javascriptNode = audioCtx.createScriptProcessor(2048, 1, 1);
 // var array, array2;
 
-audioSources.forEach(function (element, i) {
+audioSources.forEach(function (element, index) {
 	element.addEventListener("change", function () {
 		// add new channel object to list
-		addChannel(i);
-		initializeAudio(i);
+		addChannel(index);
+
+		initializeAudio(index);
 	});
 });
 
@@ -94,21 +95,57 @@ function setChannelProperties(channel, i){
 
 	channel.canvas = document.querySelectorAll(".meter")[i].getContext("2d");
 
-	channel.gradient = canvas.createLinearGradient(0, 0, 0, 130);
+	channel.gradient = channel.canvas.createLinearGradient(0, 0, 0, 130);
 	channel.gradient.addColorStop(1, '#00ff00');
 	channel.gradient.addColorStop(0.4, '#ffff00');
 	channel.gradient.addColorStop(0.05, '#ff0000');
 
 	channel.javascriptNode = audioCtx.createScriptProcessor(2048, 1, 1);
+	channel.javascriptNode.onaudioprocess = function () {
+		// get the average for the first channel
+		channel.array = new Uint8Array(channel.clipAnalyser.frequencyBinCount);
+		channel.clipAnalyser.getByteFrequencyData(channel.array);
+		var average = channel.getAverageVolume(channel.array);
+
+		// get the average for the second channel
+		channel.array2 = new Uint8Array(channel.clipAnalyser2.frequencyBinCount);
+		channel.clipAnalyser2.getByteFrequencyData(channel.array2);
+		var average2 = channel.getAverageVolume(channel.array2);
+
+		//here's the volume
+		// clear the current state
+		channel.canvas.clearRect(0, 0, 60, 130);
+
+		// set the fill style
+		channel.canvas.fillStyle = channel.gradient;
+
+		// create the meters
+		if (average < 130) {
+			channel.canvas.fillRect(0, 130 - average, 25, 130);
+		}
+		else {
+			channel.canvas.fillRect(0, 0, 25, 130);
+		}
+		if (average2 < 130) {
+			channel.canvas.fillRect(30, 130 - average2, 25, 130);
+		}
+		else {
+			channel.canvas.fillRect(30, 0, 25, 130);
+		}
+	}
+	channel.getAverageVolume = getAverageVolume;
+
+	
 	channel.array;
 	channel.array2;
 }
 
-function initializeAudio(index) {
+function initializeAudio(i) {
 	var source = audioCtx.createBufferSource();
 	sources.push(source);
+
 	var request = new XMLHttpRequest();
-	request.open('GET', audioSources[index].options[audioSources[index].selectedIndex].value, true);
+	request.open('GET', audioSources[i].options[audioSources[i].selectedIndex].value, true);
 
 	request.responseType = 'arraybuffer';
 
@@ -119,22 +156,22 @@ function initializeAudio(index) {
 		audioCtx.decodeAudioData(audioData, function (buffer) {
 			sources.forEach(function(s, index){
 				s.buffer = buffer;
+				s.connect(channels[index].preAmp);
+				channels[index].preAmp.connect(channels[index].hiEQControl);
+				channels[index].hiEQControl.connect(channels[index].hi_midEQControl);
+				channels[index].hi_midEQControl.connect(channels[index].loEQControl);
+				channels[index].loEQControl.connect(channels[index].lo_midEQControl);
 
-				s.connect(preAmp);
-				preAmp.connect(hiEQControl);
-				hiEQControl.connect(hi_midEQControl);
-				hi_midEQControl.connect(loEQControl);
-				loEQControl.connect(lo_midEQControl);
 
+				channels[index].lo_midEQControl.connect(channels[index].panNode);
+				channels[index].panNode.connect(channels[index].channelFader);
 
-				lo_midEQControl.connect(panNode);
-				panNode.connect(channelFader);
+				channels[index].channelFader.connect(audioCtx.destination);
 
-				channelFader.connect(audioCtx.destination);
-				channelFader.connect(splitter);
-				splitter.connect(clipAnalyser, 0, 0);
-				splitter.connect(clipAnalyser2, 1, 0);
-				javascriptNode.connect(splitter);
+				channels[index].channelFader.connect(channels[index].splitter);
+				channels[index].splitter.connect(channels[index].clipAnalyser, 0, 0);
+				channels[index].splitter.connect(channels[index].clipAnalyser2, 1, 0);
+				channels[index].javascriptNode.connect(channels[index].splitter);
 				s.loop = true;
 			});
 		},
@@ -202,41 +239,6 @@ function dBFSToGain(dbfs) {
 
 function processAudio(arr) {
 	checkClipping(arr);
-}
-
-
-javascriptNode.onaudioprocess = function () {
-
-	// get the average for the first channel
-	array = new Uint8Array(clipAnalyser.frequencyBinCount);
-	clipAnalyser.getByteFrequencyData(array);
-	var average = getAverageVolume(array);
-
-	// get the average for the second channel
-	array2 = new Uint8Array(clipAnalyser2.frequencyBinCount);
-	clipAnalyser2.getByteFrequencyData(array2);
-	var average2 = getAverageVolume(array2);
-
-	//here's the volume
-	// clear the current state
-	canvas.clearRect(0, 0, 60, 130);
-
-	// set the fill style
-	canvas.fillStyle = gradient;
-
-	// create the meters
-	if (average < 130) {
-		canvas.fillRect(0, 130 - average, 25, 130);
-	}
-	else {
-		canvas.fillRect(0, 0, 25, 130);
-	}
-	if (average2 < 130) {
-		canvas.fillRect(30, 130 - average2, 25, 130);
-	}
-	else {
-		canvas.fillRect(30, 0, 25, 130);
-	}
 }
 
 function getAverageVolume(array) {
