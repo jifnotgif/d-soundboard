@@ -17,7 +17,7 @@ var lo_midFreq = document.querySelectorAll(".lm-freq-gain");
 var lo_midBoost = document.querySelectorAll(".lm-boost-gain");
 
 var channels = [], sources = [];
-
+var masterChannel = audioCtx.createGain();
 // // var panNode = audioCtx.createStereoPanner();
 // var preAmp = audioCtx.createGain();
 // var channelFader = audioCtx.createGain();
@@ -154,34 +154,34 @@ function initializeAudio(i) {
 		var audioData = request.response;
 
 		audioCtx.decodeAudioData(audioData, function (buffer) {
-			sources.forEach(function(s, index){
-				s.buffer = buffer;
-				s.connect(channels[index].preAmp);
-				channels[index].preAmp.connect(channels[index].hiEQControl);
-				channels[index].hiEQControl.connect(channels[index].hi_midEQControl);
-				channels[index].hi_midEQControl.connect(channels[index].loEQControl);
-				channels[index].loEQControl.connect(channels[index].lo_midEQControl);
+				sources[i].buffer = buffer;
+				sources[i].connect(channels[i].preAmp);
+				channels[i].preAmp.connect(channels[i].hiEQControl);
+				channels[i].hiEQControl.connect(channels[i].hi_midEQControl);
+				channels[i].hi_midEQControl.connect(channels[i].loEQControl);
+				channels[i].loEQControl.connect(channels[i].lo_midEQControl);
 
 
-				channels[index].lo_midEQControl.connect(channels[index].panNode);
-				channels[index].panNode.connect(channels[index].channelFader);
+				channels[i].lo_midEQControl.connect(channels[i].panNode);
+				channels[i].panNode.connect(channels[i].channelFader);
 
-				channels[index].channelFader.connect(audioCtx.destination);
+				channels[i].channelFader.connect(masterChannel);
 
-				channels[index].channelFader.connect(channels[index].splitter);
-				channels[index].splitter.connect(channels[index].clipAnalyser, 0, 0);
-				channels[index].splitter.connect(channels[index].clipAnalyser2, 1, 0);
-				channels[index].javascriptNode.connect(channels[index].splitter);
-				s.loop = true;
-			});
+				channels[i].channelFader.connect(channels[i].splitter);
+				channels[i].splitter.connect(channels[i].clipAnalyser, 0, 0);
+				channels[i].splitter.connect(channels[i].clipAnalyser2, 1, 0);
+				channels[i].javascriptNode.connect(channels[i].splitter);
+				sources[i].loop = true;
 		},
-
-			function (e) { console.log("Error with decoding audio data" + e.err); });
+		function (e) { console.log("Error with decoding audio data" + e.err); });
 
 	}
 
 	request.send();
+	masterChannel.connect(audioCtx.destination);
 	source.start(0);
+
+
 }
 
 
