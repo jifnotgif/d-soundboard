@@ -16,22 +16,18 @@ body{
 	position: absolute;
 	bottom:0;
 }
-.aux{
-	display:flex;
-	align-items: flex-end;
-	float:right;
-
-}
-
-.master{
-	display:flex;
-	align-items: flex-end;
-	float:right;
-}
 
 input{
 	margin: 0 auto;
+}
 
+#container{
+	display:flex;
+}
+
+
+.fill{
+	flex: 1 0;
 }
 
 .mute{

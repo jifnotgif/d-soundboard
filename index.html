@@ -69,6 +69,19 @@
 					<label>
 						<input class="solo" type="button"> Solo
 					</label>
+					<div>
+						<fieldset>
+							<label>
+								<input class="12send" type="radio" name="bus"> 1-2
+							</label>
+							<label>
+								<input class="34send" type="radio" name="bus"> 3-4
+							</label>
+							<label>
+								<input class="mainsend" type="radio" name="bus" checked> L-R
+							</label>
+						</fieldset>
+					</div>
 				</div>
 
 				<input type="range" min="-50" max="10" value="-50" step=".01" class="channel-volume">
@@ -135,24 +148,59 @@
 					<label>
 						<input class="solo" type="button"> Solo
 					</label>
+					<div>
+						<fieldset>
+							<label>
+								<input class="12send" type="radio" name="bus"> 1-2
+							</label>
+							<label>
+								<input class="34send" type="radio" name="bus"> 3-4
+							</label>
+							<label>
+								<input class="mainsend" type="radio" name="bus" checked> L-R
+							</label>
+						</fieldset>
+					</div>
 				</div>
 
-				<input type="range" min="-50" max="10" value="0" step=".01" class="channel-volume">
+				<input type="range" min="-50" max="10" value="-50" step=".01" class="channel-volume">
 
 			</div>
 		</div>
 
-		<div class="channel master">
-			<input type="range" min="-50" max="10" value="-50" step=".01" id="master-volume">
-
-			<p>Master Volume</p>
+		<div class="fill"></div>
+		
+		
+		<div class="channel bus">
+			<h1>BUS 1-2</h1>
+			<label>
+				<input class="pan-bus" type="range" min="-1" max="1" step="0.1" value="0"> Pan
+			</label>
+			<div class="fades">
+				<label>
+					<input type="range" min="-100" max="100" value="50" class="fader-slider"> L
+				</label>
+				<label>
+					<input type="range" min="-100" max="100" value="50" class="fader-slider"> R
+				</label>
+			</div>
 		</div>
 
-		<div class="channel aux">
-			<input type="range" min="-100" max="100" value="50" class="fader-slider">
-			<p>L</p>
-			<input type="range" min="-100" max="100" value="50" class="fader-slider">
-			<p>R</p>
+		<div class="channel bus">
+			<h1>BUS 3-4</h1>
+			<label>
+				<input class="pan-bus" type="range" min="-1" max="1" step="0.1" value="0"> Pan
+			</label>
+			<div class="fades">
+				<label><input type="range" min="-100" max="100" value="50" class="fader-slider"> L</label>
+				<label><input type="range" min="-100" max="100" value="50" class="fader-slider"> R</label>
+			</div>
+		</div>
+
+		<div class="channel master">
+			<label> LEFT/RIGHT MIX
+				<input type="range" min="-50" max="10" value="0" step=".01" id="master-volume">
+			</label>
 		</div>
 
 	</div>

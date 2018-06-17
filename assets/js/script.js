@@ -5,16 +5,30 @@ var AudioContext = window.AudioContext || window.webkitAudioContext;
 var audioCtx = new AudioContext();
 var audioSources = document.querySelectorAll(".audio-in");
 
-var panInput = document.querySelectorAll(".pan");
-var muteInput = document.querySelectorAll(".mute");
-var channelVolumeInput = document.querySelectorAll(".channel-volume");
+
 var initGainInput = document.querySelectorAll(".gain");
+
 var hiEQ = document.querySelectorAll(".high-gain");
 var loEQ = document.querySelectorAll(".low-gain");
 var hi_midFreq = document.querySelectorAll(".hm-freq-gain");
 var hi_midBoost = document.querySelectorAll(".hm-boost-gain");
 var lo_midFreq = document.querySelectorAll(".lm-freq-gain");
 var lo_midBoost = document.querySelectorAll(".lm-boost-gain");
+
+
+var panInput = document.querySelectorAll(".pan");
+var muteInput = document.querySelectorAll(".mute");
+
+var busGroups = document.querySelectorAll("fieldset");
+// getting selected radio button in a group -- busGroups[index].elements[index].checked
+// L-R sends to LEFT/RIGHT MIX
+// 1-2 sends to BUS 1-2
+// 3-4 sends to BUS 3-4
+//	loop through elements to check which button is clicked.
+
+
+var channelVolumeInput = document.querySelectorAll(".channel-volume");
+
 var masterVolumeIn = document.querySelector("#master-volume");
 var channels = [], sources = [];
 var masterChannel = audioCtx.createGain();
@@ -42,12 +56,13 @@ function addChannel(index){
 		setChannelProperties(newChannel, index);
 		channels[index] = newChannel;
 	}
-
 }
+
 function setChannelProperties(channel, i){
 	channel.panNode = audioCtx.createStereoPanner();
 	channel.preAmp = audioCtx.createGain();
 	channel.channelFader = audioCtx.createGain();
+	channel.mute = false;
 	channel.channelFader.gain.value = 0;
 	channel.clipAnalyser = audioCtx.createAnalyser();
 	channel.clipAnalyser.fftSize = 1024;
@@ -198,11 +213,13 @@ function setKnobControlListeners(){
 	muteInput.forEach(function (input, i) {
 		input.addEventListener("click", function () {
 			if (input.classList.contains("active")) {
-				channels[i].channelFader.gain.setValueAtTime(1, audioCtx.currentTime);
+				channels[i].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[i].value), audioCtx.currentTime);
+				channels[i].mute = false;
 				input.classList.remove("active");
 			}
 			else {
 				channels[i].channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
+				channels[i].mute = true;
 				input.classList.add("active");
 			}
 		});
@@ -210,7 +227,7 @@ function setKnobControlListeners(){
 
 	channelVolumeInput.forEach(function (input, i) {
 		input.addEventListener("input", function () {
-			channels[i].channelFader.gain.value = dBFSToGain(channelVolumeInput[i].value);
+			if(channels[i].mute === false) channels[i].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[i].value), audioCtx.currentTime);
 		});
 	});
 
