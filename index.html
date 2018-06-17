@@ -71,7 +71,7 @@
 					</label>
 				</div>
 
-				<input type="range" min="-50" max="10" value="0" step=".01" class="channel-volume">
+				<input type="range" min="-50" max="10" value="-50" step=".01" class="channel-volume">
 
 			</div>
 		</div>
@@ -79,7 +79,7 @@
 		<div class="channel">
 			<div class="input-source">
 				<select class="audio-in">
-					<option></option>
+					<option disabled selected value style="display:none">input source </option>
 					<option value="assets/sounds/drums.ogg"> drum sample </option>
 					<option value="assets/sounds/piano.wav"> piano sample </option>
 					<option>add new sample</option>
@@ -143,7 +143,7 @@
 		</div>
 
 		<div class="channel master">
-			<input type="range" min="-50" max="10" value="0" step=".01" id="master-volume">
+			<input type="range" min="-50" max="10" value="-50" step=".01" id="master-volume">
 
 			<p>Master Volume</p>
 		</div>

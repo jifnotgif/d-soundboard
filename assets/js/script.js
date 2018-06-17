@@ -19,11 +19,17 @@ var masterVolumeIn = document.querySelector("#master-volume");
 var channels = [], sources = [];
 var masterChannel = audioCtx.createGain();
 
+
 audioSources.forEach(function (element, index) {
 	element.addEventListener("change", function () {
+		//initialize audio sources array, number of possible sources = num channels
+		for (var i = 0; i < index; i++) {
+			sources[i] = null;
+		}
 		// add new channel object to list
 		addChannel(index);
 
+		
 		initializeAudio(index);
 	});
 });
@@ -42,6 +48,7 @@ function setChannelProperties(channel, i){
 	channel.panNode = audioCtx.createStereoPanner();
 	channel.preAmp = audioCtx.createGain();
 	channel.channelFader = audioCtx.createGain();
+	channel.channelFader.gain.value = 0;
 	channel.clipAnalyser = audioCtx.createAnalyser();
 	channel.clipAnalyser.fftSize = 1024;
 	channel.clipAnalyser2 = audioCtx.createAnalyser();
@@ -116,10 +123,8 @@ function initializeAudio(i) {
 		sources[i].stop();
 		sources.splice(sources.indexOf(sources[i]), 1);
 	}
-
 	var source = audioCtx.createBufferSource();
-
-	sources.splice(i, 0, source);
+	sources[i] = source; 	
 
 	var request = new XMLHttpRequest();
 	request.open('GET', audioSources[i].options[audioSources[i].selectedIndex].value, true);
