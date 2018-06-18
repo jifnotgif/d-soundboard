@@ -306,10 +306,8 @@ function setKnobControlListeners(){
 
 						channels[index].splitter.connect(busses[0].leftGain, 0, 0);
 						channels[index].splitter.connect(busses[0].rightGain, 1, 0);
-						busses[0].leftGain.connect(busses[0].merger, 0, 0);
-						busses[0].rightGain.connect(busses[0].merger, 0, 1);
-						busses[0].merger.connect(busses[0].panner);
-						busses[0].panner.connect(masterChannel);
+						
+						setBusToMain(index);
 					}
 					else if (this.value === "3-4") {
 						resetChannelFlow(index);
@@ -317,10 +315,8 @@ function setKnobControlListeners(){
 
 						channels[index].splitter.connect(busses[1].leftGain, 0, 0);
 						channels[index].splitter.connect(busses[1].rightGain, 1, 0);
-						busses[1].leftGain.connect(busses[1].merger, 0, 0);
-						busses[1].rightGain.connect(busses[1].merger, 0, 1);
-						busses[1].merger.connect(busses[1].panner);
-						busses[1].panner.connect(masterChannel);
+
+						setBusToMain(index);
 					}
 					else{	
 						resetChannelFlow(index);
@@ -353,4 +349,11 @@ function resetChannelFlow(i) {
 	channels[i].channelFader.connect(channels[i].splitter);
 	channels[i].splitter.connect(channels[i].clipAnalyser, 0, 0);
 	channels[i].splitter.connect(channels[i].clipAnalyser2, 1, 0);
+
+}
+function setBusToMain(i){
+	busses[i].leftGain.connect(busses[i].merger, 0, 0);
+	busses[i].rightGain.connect(busses[i].merger, 0, 1);
+	busses[i].merger.connect(busses[i].panner);
+	busses[i].panner.connect(masterChannel);
 }
