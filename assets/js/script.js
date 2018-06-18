@@ -22,27 +22,34 @@ var panInput = document.querySelectorAll(".pan");
 var muteInput = document.querySelectorAll(".mute");
 
 var busGroups = document.querySelectorAll("fieldset");
-// getting selected radio button in a group -- busGroups[index].elements[index].checked
-// L-R sends to LEFT/RIGHT MIX
-// 1-2 sends to BUS 1-2
-// 3-4 sends to BUS 3-4
-//	loop through elements to check which button is clicked.
 
+var busPanIn = document.querySelectorAll(".pan-bus");
+var busLeftVolumeIn = document.querySelectorAll(".left-bus-volume");
+var busRightVolumeIn = document.querySelectorAll(".right-bus-volume");
 
 var channelVolumeInput = document.querySelectorAll(".channel-volume");
 
 var masterVolumeIn = document.querySelector("#master-volume");
-var channels = [], sources = [];
+var channels = [], sources = []; busses = [];
 
-var bus1PanNode = audioCtx.createPanner();
-var bus1LeftGainNode = audioCtx.createGain();
-var bus1RightGainNode = audioCtx.createGain();
-var bus1Merger = audioCtx.createChannelMerger(2);
+var bus = new Object();
+bus.panner = audioCtx.createStereoPanner();
+bus.leftGain = audioCtx.createGain();
+bus.rightGain = audioCtx.createGain();
+bus.merger = audioCtx.createChannelMerger(2);
 
-var bus2PanNode = audioCtx.createPanner();
-var bus2LeftGainNode = audioCtx.createGain();
-var bus2RightGainNode = audioCtx.createGain();
-var bus2Merger = audioCtx.createChannelMerger(2);
+busses[0] = bus;
+var bus = new Object();
+bus.panner = audioCtx.createStereoPanner();
+bus.leftGain = audioCtx.createGain();
+bus.rightGain = audioCtx.createGain();
+bus.merger = audioCtx.createChannelMerger(2);
+
+busses[1] = bus;
+// var bus2PanNode = audioCtx.createPanner();
+// var bus2LeftGainNode = audioCtx.createGain();
+// var bus2RightGainNode = audioCtx.createGain();
+// var bus2Merger = audioCtx.createChannelMerger(2);
 
 var masterChannel = audioCtx.createGain();
 
@@ -294,41 +301,75 @@ function setKnobControlListeners(){
 		for(var i =0; i< input.elements.length; i++){
 			input.elements[i].addEventListener("click", function(){
 					if(this.value === "1-2"){
-						resetChannelFlow();
-						bus2Merger.disconnect();
+						resetChannelFlow(index);
+						busses[1].merger.disconnect();
+
+						channels[index].splitter.connect(busses[0].leftGain, 0, 0);
+						channels[index].splitter.connect(busses[0].rightGain, 1, 0);
+						busses[0].leftGain.connect(busses[0].merger, 0, 0);
+						busses[0].rightGain.connect(busses[0].merger, 0, 1);
+						busses[0].merger.connect(busses[0].panner);
+						busses[0].panner.connect(masterChannel);
 
 
-						channels[index].splitter.connect(bus1LeftGainNode, 0, 0);
-						channels[index].splitter.connect(bus1RightGainNode, 1, 0);
-						bus1LeftGainNode.connect(bus1Merger, 0,0);
-						bus1RightGainNode.connect(bus1Merger, 0,1);
-						bus1Merger.connect(masterChannel);
+
+						// bus2Merger.disconnect();
+
+
+						// channels[index].splitter.connect(bus1LeftGainNode, 0, 0);
+						// channels[index].splitter.connect(bus1RightGainNode, 1, 0);
+						// bus1LeftGainNode.connect(bus1Merger, 0,0);
+						// bus1RightGainNode.connect(bus1Merger, 0,1);
+						// bus1Merger.connect(masterChannel);
 					}
-				if (this.value === "3-4") {
-						resetChannelFlow();
+					if (this.value === "3-4") {
+						resetChannelFlow(index);
+						busses[0].merger.disconnect();
 
-						bus1Merger.disconnect();
+						channels[index].splitter.connect(busses[1].leftGain, 0, 0);
+						channels[index].splitter.connect(busses[1].rightGain, 1, 0);
+						busses[1].leftGain.connect(busses[1].merger, 0, 0);
+						busses[1].rightGain.connect(busses[1].merger, 0, 1);
+						busses[1].merger.connect(busses[1].panner);
+						busses[1].panner.connect(masterChannel);
+						// bus1Merger.disconnect();
 
 
-						channels[index].splitter.connect(bus2LeftGainNode, 0, 0);
-						channels[index].splitter.connect(bus2RightGainNode, 1, 0);
-						bus2LeftGainNode.connect(bus2Merger, 0, 0);
-						bus2RightGainNode.connect(bus2Merger, 0, 1);
-						bus2Merger.connect(masterChannel);
+						// channels[index].splitter.connect(bus2LeftGainNode, 0, 0);
+						// channels[index].splitter.connect(bus2RightGainNode, 1, 0);
+						// bus2LeftGainNode.connect(bus2Merger, 0, 0);
+						// bus2RightGainNode.connect(bus2Merger, 0, 1);
+						// bus2Merger.connect(masterChannel);
 					}
 					else{	
-						resetChannelFlow();
+						resetChannelFlow(index);
 						channels[index].channelFader.connect(masterChannel);
 					}
 			});
 		}
 	});
 
+	busPanIn.forEach(function(input, i){
+		input.addEventListener("input", function () {
+			busses[i].panner.pan.setValueAtTime(input.value, audioCtx.currentTime);
+		});
+	});
+
+	busLeftVolumeIn.forEach(function(input, i){
+		input.addEventListener("input", function () {
+			busses[i].leftGain.gain.value = dBFSToGain(busLeftVolumeIn[i].value);
+		});
+	});
+	busRightVolumeIn.forEach(function (input, i) {
+		input.addEventListener("input", function () {
+			busses[i].rightGain.gain.value = dBFSToGain(busRightVolumeIn[i].value);
+		});
+	});
 }
-function resetChannelFlow() {
-	channels[index].channelFader.disconnect();
-	channels[index].splitter.disconnect();
-	channels[index].channelFader.connect(channels[index].splitter);
-	channels[index].splitter.connect(channels[index].clipAnalyser, 0, 0);
-	channels[index].splitter.connect(channels[index].clipAnalyser2, 1, 0);
+function resetChannelFlow(i) {
+	channels[i].channelFader.disconnect();
+	channels[i].splitter.disconnect();
+	channels[i].channelFader.connect(channels[i].splitter);
+	channels[i].splitter.connect(channels[i].clipAnalyser, 0, 0);
+	channels[i].splitter.connect(channels[i].clipAnalyser2, 1, 0);
 }
