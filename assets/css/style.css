@@ -39,3 +39,8 @@ input{
 .active{
 	background-color: red;
 }
+
+.filein{
+	opacity:0;
+	display:none;
+}

@@ -41,21 +41,28 @@ busses[1] = createNewBus();
 var masterChannel = audioCtx.createGain();
 
 
-audioSources.forEach(function (element, index) {
-	element.addEventListener("change", function () {
-		//initialize audio sources array, number of possible sources = num channels
-		for (var i = 0; i < index; i++) {
-			sources[i] = null;
-		}
-		// add new channel object to list
-		addChannel(index);
-
-		
-		initializeAudio(index);
-	});
-});
+var test;
+// Add initial channel
+addChannel(0);
 
 setKnobControlListeners();
+
+
+audioSources.forEach(function (element, index) {
+	element.addEventListener("change", function () {
+		if(element.value === "new_file"){
+			test = document.querySelectorAll(".filein")[index];
+			test.click();
+		}
+		else {
+			//initialize audio sources array, number of possible sources = num channels
+			for (var i = 0; i < index; i++) {
+				sources[i] = null;
+			}
+			initializeAudio(index);
+		}
+	});
+});
 
 function addChannel(index){
 	if (channels[index] == null) {
