@@ -1,3 +1,5 @@
+//NOTE: one change to make: start out with one channel only. add option to add or remove channels
+
 
 // window.addEventListener('load', init, false);
 
@@ -31,6 +33,17 @@ var channelVolumeInput = document.querySelectorAll(".channel-volume");
 
 var masterVolumeIn = document.querySelector("#master-volume");
 var channels = [], sources = [];
+
+var bus1PanNode = audioCtx.createPanner();
+var bus1LeftGainNode = audioCtx.createGain();
+var bus1RightGainNode = audioCtx.createGain();
+var bus1Merger = audioCtx.createChannelMerger(2);
+
+var bus2PanNode = audioCtx.createPanner();
+var bus2LeftGainNode = audioCtx.createGain();
+var bus2RightGainNode = audioCtx.createGain();
+var bus2Merger = audioCtx.createChannelMerger(2);
+
 var masterChannel = audioCtx.createGain();
 
 
@@ -69,7 +82,7 @@ function setChannelProperties(channel, i){
 	channel.clipAnalyser2 = audioCtx.createAnalyser();
 	channel.clipAnalyser2.fftSize = 1024;
 
-	channel.splitter = audioCtx.createChannelSplitter();
+	channel.splitter = audioCtx.createChannelSplitter(2);
 
 	channel.loEQControl = audioCtx.createBiquadFilter();
 	channel.loEQControl.type = "lowshelf";
@@ -276,4 +289,46 @@ function setKnobControlListeners(){
 	masterVolumeIn.addEventListener("input", function(){
 		masterChannel.gain.value = dBFSToGain(masterVolumeIn.value);
 	});
+
+	busGroups.forEach(function (input, index) {
+		for(var i =0; i< input.elements.length; i++){
+			input.elements[i].addEventListener("click", function(){
+					if(this.value === "1-2"){
+						resetChannelFlow();
+						bus2Merger.disconnect();
+
+
+						channels[index].splitter.connect(bus1LeftGainNode, 0, 0);
+						channels[index].splitter.connect(bus1RightGainNode, 1, 0);
+						bus1LeftGainNode.connect(bus1Merger, 0,0);
+						bus1RightGainNode.connect(bus1Merger, 0,1);
+						bus1Merger.connect(masterChannel);
+					}
+				if (this.value === "3-4") {
+						resetChannelFlow();
+
+						bus1Merger.disconnect();
+
+
+						channels[index].splitter.connect(bus2LeftGainNode, 0, 0);
+						channels[index].splitter.connect(bus2RightGainNode, 1, 0);
+						bus2LeftGainNode.connect(bus2Merger, 0, 0);
+						bus2RightGainNode.connect(bus2Merger, 0, 1);
+						bus2Merger.connect(masterChannel);
+					}
+					else{	
+						resetChannelFlow();
+						channels[index].channelFader.connect(masterChannel);
+					}
+			});
+		}
+	});
+
+}
+function resetChannelFlow() {
+	channels[index].channelFader.disconnect();
+	channels[index].splitter.disconnect();
+	channels[index].channelFader.connect(channels[index].splitter);
+	channels[index].splitter.connect(channels[index].clipAnalyser, 0, 0);
+	channels[index].splitter.connect(channels[index].clipAnalyser2, 1, 0);
 }
