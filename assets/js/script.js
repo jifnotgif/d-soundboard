@@ -32,24 +32,11 @@ var channelVolumeInput = document.querySelectorAll(".channel-volume");
 var masterVolumeIn = document.querySelector("#master-volume");
 var channels = [], sources = []; busses = [];
 
-var bus = new Object();
-bus.panner = audioCtx.createStereoPanner();
-bus.leftGain = audioCtx.createGain();
-bus.rightGain = audioCtx.createGain();
-bus.merger = audioCtx.createChannelMerger(2);
 
-busses[0] = bus;
-var bus = new Object();
-bus.panner = audioCtx.createStereoPanner();
-bus.leftGain = audioCtx.createGain();
-bus.rightGain = audioCtx.createGain();
-bus.merger = audioCtx.createChannelMerger(2);
+busses[0] = createNewBus();
+busses[1] = createNewBus();
 
-busses[1] = bus;
-// var bus2PanNode = audioCtx.createPanner();
-// var bus2LeftGainNode = audioCtx.createGain();
-// var bus2RightGainNode = audioCtx.createGain();
-// var bus2Merger = audioCtx.createChannelMerger(2);
+
 
 var masterChannel = audioCtx.createGain();
 
@@ -196,12 +183,8 @@ function initializeAudio(i) {
 
 	request.send();
 	masterChannel.connect(audioCtx.destination);
-	source.start(0);
-
-
+	source.start(audioCtx.currentTime);
 }
-
-
 
 function dBFSToGain(dbfs) {
 	return Math.pow(10, dbfs / 20);
@@ -306,7 +289,7 @@ function setKnobControlListeners(){
 
 						channels[index].splitter.connect(busses[0].leftGain, 0, 0);
 						channels[index].splitter.connect(busses[0].rightGain, 1, 0);
-						
+
 						setBusToMain(index);
 					}
 					else if (this.value === "3-4") {
@@ -356,4 +339,13 @@ function setBusToMain(i){
 	busses[i].rightGain.connect(busses[i].merger, 0, 1);
 	busses[i].merger.connect(busses[i].panner);
 	busses[i].panner.connect(masterChannel);
+}
+
+function createNewBus(){
+	var bus = new Object();
+	bus.panner = audioCtx.createStereoPanner();
+	bus.leftGain = audioCtx.createGain();
+	bus.rightGain = audioCtx.createGain();
+	bus.merger = audioCtx.createChannelMerger(2);
+	return bus;
 }
