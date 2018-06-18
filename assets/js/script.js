@@ -41,18 +41,38 @@ busses[1] = createNewBus();
 var masterChannel = audioCtx.createGain();
 
 
-var test;
 // Add initial channel
 addChannel(0);
 
 setKnobControlListeners();
+var fileUploadOptions = document.querySelectorAll(".filein");
+fileUploadOptions.forEach(function(el, i){
+	el.addEventListener("change", function(){
+		var file = this.files[0];
+		var formData = new FormData();
+		formData.append("audio", file, file.name);
+		var request = new XMLHttpRequest();
+		request.open("POST", "http://192.168.1.238:8080/assets/sounds/temp", true);
+		request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+		request.overrideMimeType('text/plain; charset=x-user-defined-binary');
+		request.send(formData);
+		request.onload = function () {
+			if (request.status === 200) {
+				// File uploaded.
+				alert("finished");
+			} else {
+				console.log(request.status);
+			}
+		};
 
+	})
+})
 
 audioSources.forEach(function (element, index) {
 	element.addEventListener("change", function () {
 		if(element.value === "new_file"){
-			test = document.querySelectorAll(".filein")[index];
-			test.click();
+			var fileUploadOption = document.querySelectorAll(".filein")[index];
+			fileUploadOption.click();
 		}
 		else {
 			//initialize audio sources array, number of possible sources = num channels
