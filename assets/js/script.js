@@ -310,19 +310,8 @@ function setKnobControlListeners(){
 						busses[0].rightGain.connect(busses[0].merger, 0, 1);
 						busses[0].merger.connect(busses[0].panner);
 						busses[0].panner.connect(masterChannel);
-
-
-
-						// bus2Merger.disconnect();
-
-
-						// channels[index].splitter.connect(bus1LeftGainNode, 0, 0);
-						// channels[index].splitter.connect(bus1RightGainNode, 1, 0);
-						// bus1LeftGainNode.connect(bus1Merger, 0,0);
-						// bus1RightGainNode.connect(bus1Merger, 0,1);
-						// bus1Merger.connect(masterChannel);
 					}
-					if (this.value === "3-4") {
+					else if (this.value === "3-4") {
 						resetChannelFlow(index);
 						busses[0].merger.disconnect();
 
@@ -332,14 +321,6 @@ function setKnobControlListeners(){
 						busses[1].rightGain.connect(busses[1].merger, 0, 1);
 						busses[1].merger.connect(busses[1].panner);
 						busses[1].panner.connect(masterChannel);
-						// bus1Merger.disconnect();
-
-
-						// channels[index].splitter.connect(bus2LeftGainNode, 0, 0);
-						// channels[index].splitter.connect(bus2RightGainNode, 1, 0);
-						// bus2LeftGainNode.connect(bus2Merger, 0, 0);
-						// bus2RightGainNode.connect(bus2Merger, 0, 1);
-						// bus2Merger.connect(masterChannel);
 					}
 					else{	
 						resetChannelFlow(index);
