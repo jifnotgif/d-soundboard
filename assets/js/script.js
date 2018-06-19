@@ -52,18 +52,9 @@ fileUploadOptions.forEach(function(el, i){
 		var formData = new FormData();
 		formData.append("audio", file, file.name);
 		var request = new XMLHttpRequest();
-		request.open("POST", "http://192.168.1.238:8080/assets/sounds/temp", true);
-		request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-		request.overrideMimeType('text/plain; charset=x-user-defined-binary');
+		request.open("POST", "server.js", true);
+		request.setRequestHeader('Content-Type', 'application/multipart/form-data');
 		request.send(formData);
-		request.onload = function () {
-			if (request.status === 200) {
-				// File uploaded.
-				alert("finished");
-			} else {
-				console.log(request.status);
-			}
-		};
 
 	})
 })
@@ -310,14 +301,13 @@ function setKnobControlListeners(){
 	busGroups.forEach(function (input, index) {
 		for(var i =0; i< input.elements.length; i++){
 			input.elements[i].addEventListener("click", function(){
-					if(this.value === "1-2"){
+				if (this.value === "1-2") {
 						resetChannelFlow(index);
 						busses[1].merger.disconnect();
 
 						channels[index].splitter.connect(busses[0].leftGain, 0, 0);
 						channels[index].splitter.connect(busses[0].rightGain, 1, 0);
-
-						setBusToMain(index);
+						setBusToMain(0);
 					}
 					else if (this.value === "3-4") {
 						resetChannelFlow(index);
@@ -326,7 +316,7 @@ function setKnobControlListeners(){
 						channels[index].splitter.connect(busses[1].leftGain, 0, 0);
 						channels[index].splitter.connect(busses[1].rightGain, 1, 0);
 
-						setBusToMain(index);
+						setBusToMain(1);
 					}
 					else{	
 						resetChannelFlow(index);
