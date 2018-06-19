@@ -34,6 +34,8 @@ var masterVolumeIn = document.querySelector("#master-volume");
 
 var fileUploadOptions = document.querySelectorAll(".filein");
 
+var newChannelBtn = document.getElementById("addChannel");
+
 var channels = [], sources = [], busses = [], uploadedFiles = [];
 
 
@@ -44,13 +46,30 @@ var masterChannel = audioCtx.createGain();
 
 
 // Add initial channels
-var index = 2; // start with 2 channels
-for (var i = 0; i < index; i++) {
+var numChannels = 1; // start with 1 channel
+for (var i = 0; i < numChannels; i++) {
 	sources[i] = null;
 	addChannel(i);
 }
 initializeAudioInputListeners();
 setKnobControlListeners();
+
+newChannelBtn.addEventListener("click", function(){
+	console.log(numChannels);
+	var htmlData = {
+		busName: numChannels
+	}
+	var template = document.getElementById("channel-template").innerHTML;
+	var html = Mustache.render(template, htmlData);
+	// breh there has to be a better way...
+	var htmlElement = document.createElement('div');
+	htmlElement.innerHTML = html;
+	//
+	document.getElementsByClassName("empty")[0].appendChild(htmlElement);
+
+	addChannel(numChannels++);
+	console.log(numChannels);
+});
 
 function initializeAudioInputListeners() {
 	fileUploadOptions.forEach(function (el, j) {
