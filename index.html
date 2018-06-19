@@ -14,7 +14,8 @@
 			<div class="input-source">
 				<input type="file" class="filein" accept=".mp3, .wav, .ogg" />
 				<select class="audio-in">
-					<option disabled selected value style="display:none">input source </option>
+					<option disabled selected value="none" style="display:none">input source</option>
+					 <!-- document.querySelector("select").value = "none"  in js to clear html option after uploading--> 
 					<option value="new_file">upload new</option>
 					<option disabled>--BASS--</option>
 					<option value="assets\sounds\bass\deephousebass.ogg"> Deep House </option>
@@ -35,9 +36,7 @@
 					<option disabled>--KEYS--</option>
 					<option value="assets\sounds\keys\electrofunksynth.ogg"> Synth </option>
 					<option value="assets\sounds\keys\funkorgan.ogg"> Organ </option>
-					<option value="assets\sounds\keys\rngkeys.ogg"> RnB Piano </option>
-
-					<option disabled>--UPLOADED--</option>
+					<option value="assets\sounds\keys\rnbkeys.ogg"> RnB Piano </option>
 				</select>
 				<p>Audio IN</p>
 			</div>
@@ -134,9 +133,7 @@
 					<option disabled>--KEYS--</option>
 					<option value="assets\sounds\keys\electrofunksynth.ogg"> Synth </option>
 					<option value="assets\sounds\keys\funkorgan.ogg"> Organ </option>
-					<option value="assets\sounds\keys\rngkeys.ogg"> RnB Piano </option>
-
-					<option disabled>--UPLOADED--</option>
+					<option value="assets\sounds\keys\rnbkeys.ogg"> RnB Piano </option>
 				</select>
 				<p>Audio IN</p>
 			</div>
@@ -152,14 +149,14 @@
 
 				<div class="hi-mid-gain-control">
 					<label>
-						<input type="range" min="550" max="13000" value="7340.9" step="1131.8" class="hm-freq-gain">
+						<input type="range" min="550" max="13000" value="6775" step="1131.8" class="hm-freq-gain">
 
 						<input type="range" min="-15" max="15" value="0" step="3" class="hm-boost-gain"> HI-MID
 					</label>
 				</div>
 				<div class="lo-mid-gain-control">
 					<label>
-						<input type="range" min="80" max="1900" value="1070" step="165.5" class="lm-freq-gain">
+						<input type="range" min="80" max="1900" value="990" step="165.5" class="lm-freq-gain">
 
 						<input type="range" min="-15" max="15" value="0" step="3" class="lm-boost-gain"> LO-MID
 					</label>

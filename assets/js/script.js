@@ -39,12 +39,10 @@ var channels = [], sources = [], busses = [], uploadedFiles = [];
 busses[0] = createNewBus();
 busses[1] = createNewBus();
 
-
-
 var masterChannel = audioCtx.createGain();
 
 
-// Add initial channel
+// Add initial channels
 var index = 2; // start with 2 channels
 for (var i = 0; i < index; i++) {
 	sources[i] = null;
@@ -75,7 +73,6 @@ function initializeAudioInputListeners() {
 			if (element.value === "new_file") {
 				var fileUploadOption = document.querySelectorAll(".filein")[index];
 				fileUploadOption.click();
-
 			}
 			else {
 				//initialize audio sources array, number of possible sources = num channels
@@ -88,16 +85,40 @@ function initializeAudioInputListeners() {
 }
 
 function resetChannelInputSettings(index) {
+	channelVolumeInput[index].value = -50;
 	channels[index].channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
-	channelVolumeInput[index].value = 0;
+	
 
-	// Reset html and js values of each knob/settings in a channel
+	initGainInput[index].value = 0;
+	channels[index].preAmp.gain.value = dBFSToGain(initGainInput[index].value);
+	
+	hiEQ[index].value = 0;
+	channels[index].hiEQControl.gain.value = hiEQ[index].value;
+	loEQ[index].value = 0;
+	channels[index].loEQControl.gain.value = loEQ[index].value;
 
+	hi_midFreq[index].value = 6775;
+	channels[index].hi_midEQControl.frequency.value = hi_midFreq[index].value;
+	hi_midBoost[index].value = 0;
+	channels[index].hi_midEQControl.gain.value = hi_midBoost[index].value;
+	lo_midFreq[index].value = 990;
+	channels[index].lo_midEQControl.frequency.value = lo_midFreq[index].value;
+	lo_midBoost[index].value = 0;
+	channels[index].lo_midEQControl.gain.value = lo_midBoost[index].value;
+
+	panInput[index].value = 0;
+	channels[index].panNode.pan.value = panInput[index].value;
+
+	if (muteInput[index].classList.contains("active")) {
+		channels[index].mute = false;
+		muteInput[index].classList.remove("active");
+	}
 }
 
 function loadSound(arraybuffer, i) {
 	audioCtx.decodeAudioData(arraybuffer, function (buffer) {
 		sources[i].buffer = buffer;
+		sources[i].loop = true;
 		sources[i].connect(channels[i].preAmp);
 		channels[i].preAmp.connect(channels[i].hiEQControl);
 		channels[i].hiEQControl.connect(channels[i].hi_midEQControl);
@@ -117,15 +138,14 @@ function loadSound(arraybuffer, i) {
 		channels[i].javascriptNode.connect(channels[i].splitter);
 
 		resetChannelInputSettings(i);
-		sources[i].loop = true;
 	}, function (e) { console.log("Error with decoding audio data" + e.err); });
 
 }
 
 function addChannel(index) {
-		var newChannel = new Object();
-		setChannelProperties(newChannel, index);
-		channels[index] = newChannel;
+	var newChannel = new Object();
+	setChannelProperties(newChannel, index);
+	channels[index] = newChannel;
 }
 
 function setChannelProperties(channel, i) {
@@ -204,11 +224,7 @@ function setChannelProperties(channel, i) {
 }
 
 function initializeAudio(i) {
-	// if(	sources[i]){
-	// 	sources[i].stop();
-	// 	sources.splice(sources.indexOf(sources[i]), 1);
-	// }
-	sources[i] = audioCtx.createBufferSource();;
+	sources[i] = audioCtx.createBufferSource();
 
 	var request = new XMLHttpRequest();
 	request.open('GET', audioSources[i].options[audioSources[i].selectedIndex].value, true);
@@ -350,7 +366,7 @@ function setKnobControlListeners() {
 
 	busPanIn.forEach(function (input, i) {
 		input.addEventListener("input", function () {
-			busses[i].panner.pan.setValueAtTime(input.value, audioCtx.currentTime);
+			busses[i].busPan.pan.setValueAtTime(input.value, audioCtx.currentTime);
 		});
 	});
 
@@ -376,13 +392,13 @@ function resetChanneltoBusConnection(i) {
 function setBusToMain(i) {
 	busses[i].leftGain.connect(busses[i].merger, 0, 0);
 	busses[i].rightGain.connect(busses[i].merger, 0, 1);
-	busses[i].merger.connect(busses[i].panner);
-	busses[i].panner.connect(masterChannel);
+	busses[i].merger.connect(busses[i].busPan);
+	busses[i].busPan.connect(masterChannel);
 }
 
 function createNewBus() {
 	var bus = new Object();
-	bus.panner = audioCtx.createStereoPanner();
+	bus.busPan = audioCtx.createStereoPanner();
 	bus.leftGain = audioCtx.createGain();
 	bus.rightGain = audioCtx.createGain();
 	bus.merger = audioCtx.createChannelMerger(2);
