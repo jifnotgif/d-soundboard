@@ -30,6 +30,9 @@ var busRightVolumeIn = document.querySelectorAll(".right-bus-volume");
 var channelVolumeInput = document.querySelectorAll(".channel-volume");
 
 var masterVolumeIn = document.querySelector("#master-volume");
+
+var fileUploadOptions = document.querySelectorAll(".filein");
+
 var channels = [], sources = [], busses = [], uploadedFiles = [];
 
 
@@ -47,50 +50,50 @@ for (var i = 0; i < index; i++) {
 	sources[i] = null;
 	addChannel(i);
 }
+initializeAudioInputListeners();
 setKnobControlListeners();
-var fileUploadOptions = document.querySelectorAll(".filein");
-// fileUploadOptions.forEach(function(el, i){
-// 	el.addEventListener("change", function(){
-// 		var file = this.files[0];
-// 		uploadedFiles.push(file);
 
-// 		console.log("finished");
-// 		// var formData = new FormData();
-// 		// formData.append("audio", file, file.name);
-// 		// var request = new XMLHttpRequest();
-// 		// request.open("POST", "server.js", true);
-// 		// request.setRequestHeader('Content-Type', 'application/multipart/form-data');
-// 		// request.send(formData);
-
-// 	})
-// })
-audioSources.forEach(function (element, index) {
-	element.addEventListener("change", function () {
-		if (sources[index]) sources[index].stop();
-
-		if (element.value === "new_file") {
-			var fileUploadOption = document.querySelectorAll(".filein")[index];
-			fileUploadOption.click();
-			fileUploadOptions.forEach(function (el, j) {
-				el.addEventListener("change", function () {
-					var file = fileUploadOptions[index].files[0];
-					uploadedFiles[j] = file;
-					var r = new FileReader();
-					r.readAsArrayBuffer(uploadedFiles[j]);
-					r.onload = function (e) {
-						sources[index] = audioCtx.createBufferSource();
-						loadSound(e.target.result, index);
-						sources[index].start(audioCtx.currentTime);
-					};
-				});
-			});
-		}
-		else {
-			//initialize audio sources array, number of possible sources = num channels
-			initializeAudio(index);
-		}
+function initializeAudioInputListeners() {
+	fileUploadOptions.forEach(function (el, j) {
+		el.addEventListener("change", function () {
+			var file = fileUploadOptions[j].files[0];
+			uploadedFiles[j] = file;
+			var r = new FileReader();
+			r.readAsArrayBuffer(uploadedFiles[j]);
+			r.onload = function (e) {
+				sources[j] = audioCtx.createBufferSource();
+				loadSound(e.target.result, j);
+				sources[j].start(audioCtx.currentTime);
+			};
+		});
 	});
-});
+
+	audioSources.forEach(function (element, index) {
+		element.addEventListener("change", function () {
+			if (sources[index]) sources[index].stop();
+
+			if (element.value === "new_file") {
+				var fileUploadOption = document.querySelectorAll(".filein")[index];
+				fileUploadOption.click();
+
+			}
+			else {
+				//initialize audio sources array, number of possible sources = num channels
+				initializeAudio(index);
+			}
+		});
+	});
+
+
+}
+
+function resetChannelInputSettings(index) {
+	channels[index].channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
+	channelVolumeInput[index].value = 0;
+
+	// Reset html and js values of each knob/settings in a channel
+
+}
 
 function loadSound(arraybuffer, i) {
 	audioCtx.decodeAudioData(arraybuffer, function (buffer) {
@@ -112,10 +115,13 @@ function loadSound(arraybuffer, i) {
 		channels[i].splitter.connect(channels[i].clipAnalyser, 0, 0);
 		channels[i].splitter.connect(channels[i].clipAnalyser2, 1, 0);
 		channels[i].javascriptNode.connect(channels[i].splitter);
+
+		resetChannelInputSettings(i);
 		sources[i].loop = true;
 	}, function (e) { console.log("Error with decoding audio data" + e.err); });
 
 }
+
 function addChannel(index) {
 		var newChannel = new Object();
 		setChannelProperties(newChannel, index);
@@ -319,8 +325,8 @@ function setKnobControlListeners() {
 	busGroups.forEach(function (input, index) {
 		for (var i = 0; i < input.elements.length; i++) {
 			input.elements[i].addEventListener("click", function () {
+				resetChanneltoBusConnection(index);
 				if (this.value === "1-2") {
-					resetChannelFlow(index);
 					busses[1].merger.disconnect();
 
 					channels[index].splitter.connect(busses[0].leftGain, 0, 0);
@@ -328,7 +334,6 @@ function setKnobControlListeners() {
 					setBusToMain(0);
 				}
 				else if (this.value === "3-4") {
-					resetChannelFlow(index);
 					busses[0].merger.disconnect();
 
 					channels[index].splitter.connect(busses[1].leftGain, 0, 0);
@@ -337,7 +342,6 @@ function setKnobControlListeners() {
 					setBusToMain(1);
 				}
 				else {
-					resetChannelFlow(index);
 					channels[index].channelFader.connect(masterChannel);
 				}
 			});
@@ -361,7 +365,7 @@ function setKnobControlListeners() {
 		});
 	});
 }
-function resetChannelFlow(i) {
+function resetChanneltoBusConnection(i) {
 	channels[i].channelFader.disconnect();
 	channels[i].splitter.disconnect();
 	channels[i].channelFader.connect(channels[i].splitter);
