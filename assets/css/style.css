@@ -30,7 +30,7 @@ input{
 	flex: 1 0;
 }
 
-.mute{
+.mute, .solo{
 	height:25px;
 	width:25px;
 	display: inline-block;

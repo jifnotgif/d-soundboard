@@ -20,6 +20,7 @@ var lo_midBoost = document.querySelectorAll(".lm-boost-gain");
 
 var panInput = document.querySelectorAll(".pan");
 var muteInput = document.querySelectorAll(".mute");
+var soloInput = document.querySelectorAll(".solo");
 
 var busGroups = document.querySelectorAll("fieldset");
 
@@ -73,15 +74,13 @@ function initializeAudioInputListeners() {
 			if (element.value === "new_file") {
 				var fileUploadOption = document.querySelectorAll(".filein")[index];
 				fileUploadOption.click();
+				this.value = "none";
 			}
 			else {
-				//initialize audio sources array, number of possible sources = num channels
-				initializeAudio(index);
+				requestPresetAudio(index);
 			}
 		});
 	});
-
-
 }
 
 function resetChannelInputSettings(index) {
@@ -101,7 +100,7 @@ function resetChannelInputSettings(index) {
 	channels[index].hi_midEQControl.frequency.value = hi_midFreq[index].value;
 	hi_midBoost[index].value = 0;
 	channels[index].hi_midEQControl.gain.value = hi_midBoost[index].value;
-	lo_midFreq[index].value = 990;
+	lo_midFreq[index].value = 1070;
 	channels[index].lo_midEQControl.frequency.value = lo_midFreq[index].value;
 	lo_midBoost[index].value = 0;
 	channels[index].lo_midEQControl.gain.value = lo_midBoost[index].value;
@@ -223,7 +222,7 @@ function setChannelProperties(channel, i) {
 	channel.array2;
 }
 
-function initializeAudio(i) {
+function requestPresetAudio(i) {
 	sources[i] = audioCtx.createBufferSource();
 
 	var request = new XMLHttpRequest();
@@ -286,6 +285,29 @@ function setKnobControlListeners() {
 		});
 	});
 
+
+	soloInput.forEach(function(input, i){
+		input.addEventListener("click", function () {
+			if (input.classList.contains("active")) {
+				for (var j = 0; j < index; j++) {
+					channels[j].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[j].value), audioCtx.currentTime);
+					channels[j].mute = false;
+				}
+				soloInput[i].classList.remove("active");
+			}
+			else {
+				for(var j=0; j<index; j++){
+					channels[j].channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
+					channels[j].mute = true;
+					soloInput[j].classList.remove("active");
+				}
+				channels[i].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[i].value), audioCtx.currentTime);
+				channels[i].mute = false;
+				soloInput[i].classList.add("active");
+			}
+		});
+	});
+	
 	channelVolumeInput.forEach(function (input, i) {
 		input.addEventListener("input", function () {
 			if (channels[i].mute === false) channels[i].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[i].value), audioCtx.currentTime);
