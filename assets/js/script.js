@@ -30,7 +30,7 @@ var busRightVolumeIn = document.querySelectorAll(".right-bus-volume");
 var channelVolumeInput = document.querySelectorAll(".channel-volume");
 
 var masterVolumeIn = document.querySelector("#master-volume");
-var channels = [], sources = []; busses = [];
+var channels = [], sources = [], busses = [], uploadedFiles = [];
 
 
 busses[0] = createNewBus();
@@ -42,48 +42,87 @@ var masterChannel = audioCtx.createGain();
 
 
 // Add initial channel
-addChannel(0);
-
+var index = 2; // start with 2 channels
+for (var i = 0; i < index; i++) {
+	sources[i] = null;
+	addChannel(i);
+}
 setKnobControlListeners();
 var fileUploadOptions = document.querySelectorAll(".filein");
-fileUploadOptions.forEach(function(el, i){
-	el.addEventListener("change", function(){
-		var file = this.files[0];
-		var formData = new FormData();
-		formData.append("audio", file, file.name);
-		var request = new XMLHttpRequest();
-		request.open("POST", "server.js", true);
-		request.setRequestHeader('Content-Type', 'application/multipart/form-data');
-		request.send(formData);
+// fileUploadOptions.forEach(function(el, i){
+// 	el.addEventListener("change", function(){
+// 		var file = this.files[0];
+// 		uploadedFiles.push(file);
 
-	})
-})
+// 		console.log("finished");
+// 		// var formData = new FormData();
+// 		// formData.append("audio", file, file.name);
+// 		// var request = new XMLHttpRequest();
+// 		// request.open("POST", "server.js", true);
+// 		// request.setRequestHeader('Content-Type', 'application/multipart/form-data');
+// 		// request.send(formData);
 
+// 	})
+// })
 audioSources.forEach(function (element, index) {
 	element.addEventListener("change", function () {
-		if(element.value === "new_file"){
+		if (sources[index]) sources[index].stop();
+
+		if (element.value === "new_file") {
 			var fileUploadOption = document.querySelectorAll(".filein")[index];
 			fileUploadOption.click();
+			fileUploadOptions.forEach(function (el, j) {
+				el.addEventListener("change", function () {
+					var file = fileUploadOptions[index].files[0];
+					uploadedFiles[j] = file;
+					var r = new FileReader();
+					r.readAsArrayBuffer(uploadedFiles[j]);
+					r.onload = function (e) {
+						sources[index] = audioCtx.createBufferSource();
+						loadSound(e.target.result, index);
+						sources[index].start(audioCtx.currentTime);
+					};
+				});
+			});
 		}
 		else {
 			//initialize audio sources array, number of possible sources = num channels
-			for (var i = 0; i < index; i++) {
-				sources[i] = null;
-			}
 			initializeAudio(index);
 		}
 	});
 });
 
-function addChannel(index){
-	if (channels[index] == null) {
+function loadSound(arraybuffer, i) {
+	audioCtx.decodeAudioData(arraybuffer, function (buffer) {
+		sources[i].buffer = buffer;
+		sources[i].connect(channels[i].preAmp);
+		channels[i].preAmp.connect(channels[i].hiEQControl);
+		channels[i].hiEQControl.connect(channels[i].hi_midEQControl);
+		channels[i].hi_midEQControl.connect(channels[i].loEQControl);
+		channels[i].loEQControl.connect(channels[i].lo_midEQControl);
+
+
+		channels[i].lo_midEQControl.connect(channels[i].panNode);
+		channels[i].panNode.connect(channels[i].channelFader);
+
+		channels[i].channelFader.connect(masterChannel);
+		masterChannel.connect(audioCtx.destination);
+
+		channels[i].channelFader.connect(channels[i].splitter);
+		channels[i].splitter.connect(channels[i].clipAnalyser, 0, 0);
+		channels[i].splitter.connect(channels[i].clipAnalyser2, 1, 0);
+		channels[i].javascriptNode.connect(channels[i].splitter);
+		sources[i].loop = true;
+	}, function (e) { console.log("Error with decoding audio data" + e.err); });
+
+}
+function addChannel(index) {
 		var newChannel = new Object();
 		setChannelProperties(newChannel, index);
 		channels[index] = newChannel;
-	}
 }
 
-function setChannelProperties(channel, i){
+function setChannelProperties(channel, i) {
 	channel.panNode = audioCtx.createStereoPanner();
 	channel.preAmp = audioCtx.createGain();
 	channel.channelFader = audioCtx.createGain();
@@ -153,18 +192,17 @@ function setChannelProperties(channel, i){
 	}
 	channel.getAverageVolume = getAverageVolume;
 
-	
+
 	channel.array;
 	channel.array2;
 }
 
 function initializeAudio(i) {
-	if(	sources[i]){
-		sources[i].stop();
-		sources.splice(sources.indexOf(sources[i]), 1);
-	}
-	var source = audioCtx.createBufferSource();
-	sources[i] = source; 	
+	// if(	sources[i]){
+	// 	sources[i].stop();
+	// 	sources.splice(sources.indexOf(sources[i]), 1);
+	// }
+	sources[i] = audioCtx.createBufferSource();;
 
 	var request = new XMLHttpRequest();
 	request.open('GET', audioSources[i].options[audioSources[i].selectedIndex].value, true);
@@ -175,33 +213,13 @@ function initializeAudio(i) {
 	request.onload = function () {
 		var audioData = request.response;
 
-		audioCtx.decodeAudioData(audioData, function (buffer) {
-				sources[i].buffer = buffer;
-				sources[i].connect(channels[i].preAmp);
-				channels[i].preAmp.connect(channels[i].hiEQControl);
-				channels[i].hiEQControl.connect(channels[i].hi_midEQControl);
-				channels[i].hi_midEQControl.connect(channels[i].loEQControl);
-				channels[i].loEQControl.connect(channels[i].lo_midEQControl);
+		loadSound(audioData, i);
 
-
-				channels[i].lo_midEQControl.connect(channels[i].panNode);
-				channels[i].panNode.connect(channels[i].channelFader);
-
-				channels[i].channelFader.connect(masterChannel);
-
-				channels[i].channelFader.connect(channels[i].splitter);
-				channels[i].splitter.connect(channels[i].clipAnalyser, 0, 0);
-				channels[i].splitter.connect(channels[i].clipAnalyser2, 1, 0);
-				channels[i].javascriptNode.connect(channels[i].splitter);
-				sources[i].loop = true;
-		},
-		function (e) { console.log("Error with decoding audio data" + e.err); });
 
 	}
 
 	request.send();
-	masterChannel.connect(audioCtx.destination);
-	source.start(audioCtx.currentTime);
+	sources[i].start(audioCtx.currentTime);
 }
 
 function dBFSToGain(dbfs) {
@@ -223,7 +241,7 @@ function getAverageVolume(array) {
 	return average;
 }
 
-function setKnobControlListeners(){
+function setKnobControlListeners() {
 
 	panInput.forEach(function (input, i) {
 		input.addEventListener("input", function () {
@@ -248,7 +266,7 @@ function setKnobControlListeners(){
 
 	channelVolumeInput.forEach(function (input, i) {
 		input.addEventListener("input", function () {
-			if(channels[i].mute === false) channels[i].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[i].value), audioCtx.currentTime);
+			if (channels[i].mute === false) channels[i].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[i].value), audioCtx.currentTime);
 		});
 	});
 
@@ -294,45 +312,45 @@ function setKnobControlListeners(){
 		})
 	});
 
-	masterVolumeIn.addEventListener("input", function(){
+	masterVolumeIn.addEventListener("input", function () {
 		masterChannel.gain.value = dBFSToGain(masterVolumeIn.value);
 	});
 
 	busGroups.forEach(function (input, index) {
-		for(var i =0; i< input.elements.length; i++){
-			input.elements[i].addEventListener("click", function(){
+		for (var i = 0; i < input.elements.length; i++) {
+			input.elements[i].addEventListener("click", function () {
 				if (this.value === "1-2") {
-						resetChannelFlow(index);
-						busses[1].merger.disconnect();
+					resetChannelFlow(index);
+					busses[1].merger.disconnect();
 
-						channels[index].splitter.connect(busses[0].leftGain, 0, 0);
-						channels[index].splitter.connect(busses[0].rightGain, 1, 0);
-						setBusToMain(0);
-					}
-					else if (this.value === "3-4") {
-						resetChannelFlow(index);
-						busses[0].merger.disconnect();
+					channels[index].splitter.connect(busses[0].leftGain, 0, 0);
+					channels[index].splitter.connect(busses[0].rightGain, 1, 0);
+					setBusToMain(0);
+				}
+				else if (this.value === "3-4") {
+					resetChannelFlow(index);
+					busses[0].merger.disconnect();
 
-						channels[index].splitter.connect(busses[1].leftGain, 0, 0);
-						channels[index].splitter.connect(busses[1].rightGain, 1, 0);
+					channels[index].splitter.connect(busses[1].leftGain, 0, 0);
+					channels[index].splitter.connect(busses[1].rightGain, 1, 0);
 
-						setBusToMain(1);
-					}
-					else{	
-						resetChannelFlow(index);
-						channels[index].channelFader.connect(masterChannel);
-					}
+					setBusToMain(1);
+				}
+				else {
+					resetChannelFlow(index);
+					channels[index].channelFader.connect(masterChannel);
+				}
 			});
 		}
 	});
 
-	busPanIn.forEach(function(input, i){
+	busPanIn.forEach(function (input, i) {
 		input.addEventListener("input", function () {
 			busses[i].panner.pan.setValueAtTime(input.value, audioCtx.currentTime);
 		});
 	});
 
-	busLeftVolumeIn.forEach(function(input, i){
+	busLeftVolumeIn.forEach(function (input, i) {
 		input.addEventListener("input", function () {
 			busses[i].leftGain.gain.value = dBFSToGain(busLeftVolumeIn[i].value);
 		});
@@ -351,14 +369,14 @@ function resetChannelFlow(i) {
 	channels[i].splitter.connect(channels[i].clipAnalyser2, 1, 0);
 
 }
-function setBusToMain(i){
+function setBusToMain(i) {
 	busses[i].leftGain.connect(busses[i].merger, 0, 0);
 	busses[i].rightGain.connect(busses[i].merger, 0, 1);
 	busses[i].merger.connect(busses[i].panner);
 	busses[i].panner.connect(masterChannel);
 }
 
-function createNewBus(){
+function createNewBus() {
 	var bus = new Object();
 	bus.panner = audioCtx.createStereoPanner();
 	bus.leftGain = audioCtx.createGain();
