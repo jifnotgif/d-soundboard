@@ -282,7 +282,55 @@ function addChannel(index) {
 				newChannel.mute = true;
 				this.classList.add("active");
 			}
-		})
+		});
+
+		//fix
+		this.soloInput.addEventListener("click", function(){
+			if (this.classList.contains("active")) {
+				for (var j = 0; j < numChannels; j++) {
+					channels[j].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[j].value), audioCtx.currentTime);
+					channels[j].mute = false;
+				}
+				this.classList.remove("active");
+			}
+			else {
+				for (var j = 0; j < numChannels; j++) {
+					channels[j].channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
+					channels[j].mute = true;
+					soloInput[j].classList.remove("active");
+				}
+				newChannel.channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.value), audioCtx.currentTime);
+				newChannel.mute = false;
+				this.classList.add("active");
+			}
+		});
+
+		this.channelVolumeInput.addEventListener("input", function(){
+			if (newChannel.mute === false) newChannel.channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.value), audioCtx.currentTime);
+		});
+
+		this.initGainInput.addEventListener("input",function(){
+			newChannel.preAmp.gain.value = dBFSToGain(this.value);
+		});
+
+		this.hiEQ.addEventListener("input",function(){
+			newChannel.hiEQControl.gain.value = this.value;
+		});
+		this.loEQ.addEventListener("input", function () {
+			newChannel.loEQControl.gain.value = this.value;
+		});
+		this.hi_midFreq.addEventListener("input",function(){
+			newChannel.hi_midEQControl.frequency.value = this.value;
+		});
+		this.hi_midBoost.addEventListener("input",function(){
+			newChannel.hi_midEQControl.gain.value = this.value;
+		});
+		this.lo_midFreq.addEventListener("input", function () {
+			newChannel.lo_midEQControl.frequency.value = this.value;
+		});
+		this.lo_midBoost.addEventListener("input", function () {
+			newChannel.lo_midEQControl.gain.value = this.value;
+		});
 	};
 
 
@@ -441,26 +489,26 @@ function setChannelControlListeners() {
 	// });
 
 
-	soloInput.forEach(function (input, i) {
-		delegateEvent(document, "click", ".solo", function () {
-			if (input.classList.contains("active")) {
-				for (var j = 0; j < numChannels; j++) {
-					channels[j].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[j].value), audioCtx.currentTime);
-					channels[j].mute = false;
-					soloInput[j].classList.remove("active");
-				}
-			}
-			else {
-				for (var j = 0; j < numChannels; j++) {
-					channels[j].channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
-					channels[j].mute = true;
-					soloInput[j].classList.remove("active");
-				}
-				channels[i].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[i].value), audioCtx.currentTime);
-				channels[i].mute = false;
-				soloInput[i].classList.add("active");
-			}
-		});
+	// soloInput.forEach(function (input, i) {
+	// 	delegateEvent(document, "click", ".solo", function () {
+	// 		if (input.classList.contains("active")) {
+	// 			for (var j = 0; j < numChannels; j++) {
+	// 				channels[j].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[j].value), audioCtx.currentTime);
+	// 				channels[j].mute = false;
+	// 				soloInput[j].classList.remove("active");
+	// 			}
+	// 		}
+	// 		else {
+	// 			for (var j = 0; j < numChannels; j++) {
+	// 				channels[j].channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
+	// 				channels[j].mute = true;
+	// 				soloInput[j].classList.remove("active");
+	// 			}
+	// 			channels[i].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[i].value), audioCtx.currentTime);
+	// 			channels[i].mute = false;
+	// 			soloInput[i].classList.add("active");
+	// 		}
+	// 	});
 		// input.addEventListener("click", function () {
 		// 	if (input.classList.contains("active")) {
 		// 		for (var j = 0; j < index; j++) {
@@ -480,80 +528,80 @@ function setChannelControlListeners() {
 		// 		soloInput[i].classList.add("active");
 		// 	}
 		// });
-	});
+	// });
 	
-	channelVolumeInput.forEach(function (input, i) {
-		delegateEvent(document, "input", ".channel-volume", function () {
-			if (channels[i].mute === false) channels[i].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[i].value), audioCtx.currentTime);
-		});	
-		// input.addEventListener("input", function () {
-		// 	if (channels[i].mute === false) channels[i].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[i].value), audioCtx.currentTime);
-		// });
-	});
+	// channelVolumeInput.forEach(function (input, i) {
+	// 	delegateEvent(document, "input", ".channel-volume", function () {
+	// 		if (channels[i].mute === false) channels[i].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[i].value), audioCtx.currentTime);
+	// 	});	
+	// 	// input.addEventListener("input", function () {
+	// 	// 	if (channels[i].mute === false) channels[i].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[i].value), audioCtx.currentTime);
+	// 	// });
+	// });
 
-	initGainInput.forEach(function (input, i) {
-		delegateEvent(document, "input", ".gain", function () {
-			channels[i].preAmp.gain.value = dBFSToGain(initGainInput[i].value);
-		});
+	// initGainInput.forEach(function (input, i) {
+	// 	delegateEvent(document, "input", ".gain", function () {
+	// 		channels[i].preAmp.gain.value = dBFSToGain(initGainInput[i].value);
+	// 	});
 
-		// input.addEventListener("input", function () {
-		// 	channels[i].preAmp.gain.value = dBFSToGain(initGainInput[i].value);
-		// })
-	});
+	// 	// input.addEventListener("input", function () {
+	// 	// 	channels[i].preAmp.gain.value = dBFSToGain(initGainInput[i].value);
+	// 	// })
+	// });
 
-	hiEQ.forEach(function (input, i) {
-		delegateEvent(document, "input", ".high-gain", function () {
-			channels[i].hiEQControl.gain.value = hiEQ[i].value;
-		});
-		// input.addEventListener("input", function () {
-		// 	channels[i].hiEQControl.gain.value = hiEQ[i].value;
-		// })
-	});
+	// hiEQ.forEach(function (input, i) {
+	// 	delegateEvent(document, "input", ".high-gain", function () {
+	// 		channels[i].hiEQControl.gain.value = hiEQ[i].value;
+	// 	});
+	// 	// input.addEventListener("input", function () {
+	// 	// 	channels[i].hiEQControl.gain.value = hiEQ[i].value;
+	// 	// })
+	// });
 
-	loEQ.forEach(function (input, i) {
-		delegateEvent(document, "input", ".low-gain", function () {
-			channels[i].loEQControl.gain.value = loEQ[i].value;
-		});
-		// input.addEventListener("input", function () {
-		// 	channels[i].loEQControl.gain.value = loEQ[i].value;
-		// })
-	});
+	// loEQ.forEach(function (input, i) {
+	// 	delegateEvent(document, "input", ".low-gain", function () {
+	// 		channels[i].loEQControl.gain.value = loEQ[i].value;
+	// 	});
+	// 	// input.addEventListener("input", function () {
+	// 	// 	channels[i].loEQControl.gain.value = loEQ[i].value;
+	// 	// })
+	// });
 
-	hi_midFreq.forEach(function (input, i) {
-		delegateEvent(document, "input", ".hm-freq-gain", function () {
-			channels[i].hi_midEQControl.frequency.value = hi_midFreq[i].value;
-		});
-		// input.addEventListener("input", function () {
-		// 	channels[i].hi_midEQControl.frequency.value = hi_midFreq[i].value;
-		// })
-	});
+	// hi_midFreq.forEach(function (input, i) {
+	// 	delegateEvent(document, "input", ".hm-freq-gain", function () {
+	// 		channels[i].hi_midEQControl.frequency.value = hi_midFreq[i].value;
+	// 	});
+	// 	// input.addEventListener("input", function () {
+	// 	// 	channels[i].hi_midEQControl.frequency.value = hi_midFreq[i].value;
+	// 	// })
+	// });
 
-	hi_midBoost.forEach(function (input, i) {
-		delegateEvent(document, "input", ".hm-boost-gain", function () {
-			channels[i].hi_midEQControl.gain.value = hi_midBoost[i].value;
-		});
-		// input.addEventListener("input", function () {
-		// 	channels[i].hi_midEQControl.gain.value = hi_midBoost[i].value;
-		// })
-	});
+	// hi_midBoost.forEach(function (input, i) {
+	// 	delegateEvent(document, "input", ".hm-boost-gain", function () {
+	// 		channels[i].hi_midEQControl.gain.value = hi_midBoost[i].value;
+	// 	});
+	// 	// input.addEventListener("input", function () {
+	// 	// 	channels[i].hi_midEQControl.gain.value = hi_midBoost[i].value;
+	// 	// })
+	// });
 
-	lo_midFreq.forEach(function (input, i) {
-		delegateEvent(document, "input", ".lm-freq-gain", function () {
-			channels[i].lo_midEQControl.frequency.value = lo_midFreq[i].value;
-		});
-		// input.addEventListener("input", function () {
-		// 	channels[i].lo_midEQControl.frequency.value = lo_midFreq[i].value;
-		// })
-	});
+	// lo_midFreq.forEach(function (input, i) {
+	// 	delegateEvent(document, "input", ".lm-freq-gain", function () {
+	// 		channels[i].lo_midEQControl.frequency.value = lo_midFreq[i].value;
+	// 	});
+	// 	// input.addEventListener("input", function () {
+	// 	// 	channels[i].lo_midEQControl.frequency.value = lo_midFreq[i].value;
+	// 	// })
+	// });
 
-	lo_midBoost.forEach(function (input, i) {
-		delegateEvent(document, "input", ".lm-boost-gain", function () {
-			channels[i].lo_midEQControl.gain.value = lo_midBoost[i].value;
-		});
-		// input.addEventListener("input", function () {
-		// 	channels[i].lo_midEQControl.gain.value = lo_midBoost[i].value;
-		// })
-	});
+	// lo_midBoost.forEach(function (input, i) {
+	// 	delegateEvent(document, "input", ".lm-boost-gain", function () {
+	// 		channels[i].lo_midEQControl.gain.value = lo_midBoost[i].value;
+	// 	});
+	// 	// input.addEventListener("input", function () {
+	// 	// 	channels[i].lo_midEQControl.gain.value = lo_midBoost[i].value;
+	// 	// })
+	// });
 
 	masterVolumeIn.addEventListener("input", function () {
 		masterChannel.gain.value = dBFSToGain(masterVolumeIn.value);
