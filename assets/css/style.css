@@ -54,3 +54,11 @@ canvas{
     display: block;
     
 }
+
+.channel-head{
+	display:inline;
+}
+
+.fa-minus-square{
+	float:right;
+}

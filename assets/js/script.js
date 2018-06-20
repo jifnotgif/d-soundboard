@@ -35,6 +35,7 @@ var masterVolumeIn = document.querySelector("#master-volume");
 var fileUploadOptions = document.querySelectorAll(".filein");
 
 var newChannelBtn = document.getElementById("addChannel");
+var removeChannelBtns = document.querySelectorAll("i");
 
 var channels = [], sources = [], busses = [], uploadedFiles = [];
 
@@ -43,7 +44,7 @@ busses[0] = createNewBus();
 busses[1] = createNewBus();
 
 var masterChannel = audioCtx.createGain();
-
+var maxChannels = 5;
 
 // Add initial channels
 var numChannels = 1; // start with 1 channel
@@ -55,22 +56,32 @@ initializeAudioInputListeners();
 setKnobControlListeners();
 
 newChannelBtn.addEventListener("click", function(){
-	console.log(numChannels);
+	if (numChannels < maxChannels)
 	var htmlData = {
 		busName: numChannels
 	}
-	var template = document.getElementById("channel-template").innerHTML;
-	var html = Mustache.render(template, htmlData);
+	var chTemplate = document.getElementById("channel-template").innerHTML;
+	if (numChannels === maxChannels - 1){
+		document.getElementById("disappear").remove();
+	}
+	
+	var html = Mustache.render(chTemplate, htmlData);
 	// breh there has to be a better way...
-	var htmlElement = document.createElement('div');
-	htmlElement.innerHTML = html;
-	//
-	document.getElementsByClassName("empty")[0].appendChild(htmlElement);
-
+	// var htmlElement = document.createElement('div');
+	// htmlElement.outerHTML = html;
+	// also... eventlisteners are destroyed upon creating new nodes
+	// document.getElementById("test").appendChild(htmlElement);
+	document.getElementById("test").outerHTML = html;
+	
 	addChannel(numChannels++);
-	console.log(numChannels);
 });
 
+removeChannelBtns.forEach(function(btn){
+	btn.addEventListener("click",function(){
+		closestByClass(this, "channel").remove();
+		numChannels--;
+	})
+})
 function initializeAudioInputListeners() {
 	fileUploadOptions.forEach(function (el, j) {
 		el.addEventListener("change", function () {
@@ -192,8 +203,6 @@ function setChannelProperties(channel, i) {
 	channel.lo_midEQControl.type = "peaking";
 
 	channel.meter;
-	channel.canvasContext = document.querySelectorAll(".meter")[i].getContext("2d");
-
 	channel.canvas = document.querySelectorAll(".meter")[i].getContext("2d");
 
 	channel.gradient = channel.canvas.createLinearGradient(0, 0, 0, 130);
@@ -444,4 +453,31 @@ function createNewBus() {
 	bus.rightGain = audioCtx.createGain();
 	bus.merger = audioCtx.createChannelMerger(2);
 	return bus;
+}
+
+/**
+ * Get the closest element of a given element by class
+ *
+ * Take an element (the first param), and traverse the DOM upward from it
+ * until it hits the element with a given class name (second parameter).
+ * This mimics jQuery's `.closest()`.
+ *
+ * @param  {element} el    The element to start from
+ * @param  {string}  clazz The class name
+ * @return {element}       The closest element
+ */
+function closestByClass(el, clazz) {
+	// Traverse the DOM up with a while loop
+	while (el.className != clazz) {
+		// Increment the loop to the parent node
+		el = el.parentNode;
+		if (!el) {
+			return null;
+		}
+	}
+	// At this point, the while loop has stopped and `el` represents the element that has
+	// the class you specified in the second parameter of the function `clazz`
+
+	// Then return the matched element
+	return el;
 }
