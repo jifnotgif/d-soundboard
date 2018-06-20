@@ -15,7 +15,7 @@
 
 <body>
 	<div class="container-fluid">
-		<div class="channel">
+		<!-- <div class="channel">
 			<div class="input-source">
 				<input type="file" class="filein" accept=".mp3, .wav, .ogg" />
 				<div class="channel-head">
@@ -100,13 +100,13 @@
 					<div>
 						<fieldset>
 							<label>
-								<input class="12send" type="radio" name="bus" value="1-2"> 1-2
+								<input class="busOption" type="radio" name="bus_" value="1-2 send" > 1-2
 							</label>
 							<label>
-								<input class="34send" type="radio" name="bus" value="3-4"> 3-4
+								<input class="busOption" type="radio" name="bus_" value="3-4 send"> 3-4
 							</label>
 							<label>
-								<input class="mainsend" type="radio" name="bus" value="main" checked> L-R
+								<input class="busOption" type="radio" name="bus_" value="main send" checked> L-R
 							</label>
 						</fieldset>
 					</div>
@@ -115,12 +115,12 @@
 				<input type="range" min="-50" max="10" value="-50" step=".01" class="channel-volume">
 
 			</div>
-		</div>
-		<div id="test">
+		</div> -->
+		<div id="empty">
 
 		</div>
-		<div id = "disappear" class="channel">
-			<button id="addChannel">Add NEW channel</button>
+		<div id="add">
+			<i id="addbtn" class="fas fa-plus"></i>
 		</div>
 
 		<div class="fill"></div>
@@ -256,13 +256,13 @@
 					<div>
 						<fieldset>
 							<label>
-								<input class="12send" type="radio" name="bus{{busName}}" value="1-2"> 1-2
+								<input class="busOption" type="radio" name="bus_{{busName}}" value="1-2 send"> 1-2
 							</label>
 							<label>
-								<input class="34send" type="radio" name="bus{{busName}}" value="3-4"> 3-4
+								<input class="busOption" type="radio" name="bus_{{busName}}" value="3-4 send"> 3-4
 							</label>
 							<label>
-								<input class="mainsend" type="radio" name="bus{{busName}}" value="main" checked> L-R
+								<input class="busOption" type="radio" name="bus_{{busName}}" value="main send" checked> L-R
 							</label>
 						</fieldset>
 					</div>
@@ -272,7 +272,7 @@
 
 			</div>
 		</div>
-		<div id="test"></div>
+		<div id="empty"></div>
 	</script>
 	<script type="text/javascript" src="assets/js/script.js"></script>
 </body>

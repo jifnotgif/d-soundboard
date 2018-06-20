@@ -34,8 +34,8 @@ var masterVolumeIn = document.querySelector("#master-volume");
 
 var fileUploadOptions = document.querySelectorAll(".filein");
 
-var newChannelBtn = document.getElementById("addChannel");
-var removeChannelBtns = document.querySelectorAll("i");
+var newChannelBtn = document.querySelector(".fa-plus");
+var removeChannelBtns = document.querySelectorAll(".fa-minus-square");
 
 var channels = [], sources = [], busses = [], uploadedFiles = [];
 
@@ -45,46 +45,79 @@ busses[1] = createNewBus();
 
 var masterChannel = audioCtx.createGain();
 var maxChannels = 5;
-
+var busCounter =0;
 // Add initial channels
-var numChannels = 1; // start with 1 channel
-for (var i = 0; i < numChannels; i++) {
-	sources[i] = null;
-	addChannel(i);
-}
-initializeAudioInputListeners();
-setKnobControlListeners();
+var numChannels = 0; // start with 1 channel
+// for (var i = 0; i < numChannels; i++) {
+// 	sources[i] = null;
+// 	addChannel(i);
+// }
+// initializeAudioInputListeners();
+// setChannelControlListeners();
 
-newChannelBtn.addEventListener("click", function(){
-	if (numChannels < maxChannels)
+delegateEvent(document, "click", "#addbtn", function(){
 	var htmlData = {
-		busName: numChannels
+		busName: busCounter++
 	}
 	var chTemplate = document.getElementById("channel-template").innerHTML;
-	if (numChannels === maxChannels - 1){
-		document.getElementById("disappear").remove();
+	if (numChannels === maxChannels - 1) {
+		document.getElementById("addbtn").remove();
 	}
-	
+
 	var html = Mustache.render(chTemplate, htmlData);
 	// breh there has to be a better way...
 	// var htmlElement = document.createElement('div');
-	// htmlElement.outerHTML = html;
+	// htmlElement.innerHTML = html;
 	// also... eventlisteners are destroyed upon creating new nodes
 	// document.getElementById("test").appendChild(htmlElement);
-	document.getElementById("test").outerHTML = html;
-	
-	addChannel(numChannels++);
-});
+	document.getElementById("empty").outerHTML = html;
 
-removeChannelBtns.forEach(function(btn){
-	btn.addEventListener("click",function(){
+	addChannel(numChannels++);
+
+	/********************************* */
+	audioSources = document.querySelectorAll(".audio-in");
+
+
+	initGainInput = document.querySelectorAll(".gain");
+
+	hiEQ = document.querySelectorAll(".high-gain");
+	loEQ = document.querySelectorAll(".low-gain");
+	hi_midFreq = document.querySelectorAll(".hm-freq-gain");
+	hi_midBoost = document.querySelectorAll(".hm-boost-gain");
+	lo_midFreq = document.querySelectorAll(".lm-freq-gain");
+	lo_midBoost = document.querySelectorAll(".lm-boost-gain");
+
+
+	panInput = document.querySelectorAll(".pan");
+	muteInput = document.querySelectorAll(".mute");
+	soloInput = document.querySelectorAll(".solo");
+
+	busGroups = document.querySelectorAll("fieldset");
+
+	channelVolumeInput = document.querySelectorAll(".channel-volume");
+
+
+ 	fileUploadOptions = document.querySelectorAll(".filein");
+
+	initializeAudioInputListeners();
+	setChannelControlListeners();
+
+})
+removeChannelBtns.forEach(function (btn) {
+	delegateEvent(document, "click", ".fa-minus-square", function () {
 		closestByClass(this, "channel").remove();
 		numChannels--;
-	})
+		// if DOM can't locate add button (max channels reached and removed)
+		if (numChannels === maxChannels - 1 && document.getElementById("addbtn") === null) {
+			document.getElementById("add").innerHTML = "<i id=\"addbtn\" class=\"fas fa-plus\"></i>";
+		}
+	})		
 })
+
 function initializeAudioInputListeners() {
 	fileUploadOptions.forEach(function (el, j) {
-		el.addEventListener("change", function () {
+		delegateEvent(document, "change", ".filein", function (event) {
+			console.log(j);
 			var file = fileUploadOptions[j].files[0];
 			uploadedFiles[j] = file;
 			var r = new FileReader();
@@ -95,10 +128,23 @@ function initializeAudioInputListeners() {
 				sources[j].start(audioCtx.currentTime);
 			};
 		});
+
+
+		// el.addEventListener("change", function () {
+		// 	var file = fileUploadOptions[j].files[0];
+		// 	uploadedFiles[j] = file;
+		// 	var r = new FileReader();
+		// 	r.readAsArrayBuffer(uploadedFiles[j]);
+		// 	r.onload = function (e) {
+		// 		sources[j] = audioCtx.createBufferSource();
+		// 		loadSound(e.target.result, j);
+		// 		sources[j].start(audioCtx.currentTime);
+		// 	};
+		// });
 	});
 
 	audioSources.forEach(function (element, index) {
-		element.addEventListener("change", function () {
+		delegateEvent(document, "change", ".audio-in", function () {
 			if (sources[index]) sources[index].stop();
 
 			if (element.value === "new_file") {
@@ -110,10 +156,23 @@ function initializeAudioInputListeners() {
 				requestPresetAudio(index);
 			}
 		});
+		// element.addEventListener("change", function () {
+		// 	if (sources[index]) sources[index].stop();
+
+		// 	if (element.value === "new_file") {
+		// 		var fileUploadOption = document.querySelectorAll(".filein")[index];
+		// 		fileUploadOption.click();
+		// 		this.value = "none";
+		// 	}
+		// 	else {
+		// 		requestPresetAudio(index);
+		// 	}
+		// });
 	});
 }
 
 function resetChannelInputSettings(index) {
+	console.log(index);
 	channelVolumeInput[index].value = -50;
 	channels[index].channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
 	
@@ -290,16 +349,19 @@ function getAverageVolume(array) {
 	return average;
 }
 
-function setKnobControlListeners() {
+function setChannelControlListeners() {
 
 	panInput.forEach(function (input, i) {
-		input.addEventListener("input", function () {
+		delegateEvent(document, "input", ".pan", function () {
 			channels[i].panNode.pan.setValueAtTime(input.value, audioCtx.currentTime);
-		});
+		});	
+		// input.addEventListener("input", function () {
+		// 	channels[i].panNode.pan.setValueAtTime(input.value, audioCtx.currentTime);
+		// });
 	});
 
 	muteInput.forEach(function (input, i) {
-		input.addEventListener("click", function () {
+		delegateEvent(document, "click", ".mute", function () {
 			if (input.classList.contains("active")) {
 				channels[i].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[i].value), audioCtx.currentTime);
 				channels[i].mute = false;
@@ -310,12 +372,24 @@ function setKnobControlListeners() {
 				channels[i].mute = true;
 				input.classList.add("active");
 			}
-		});
+		});	
+		// input.addEventListener("click", function () {
+		// 	if (input.classList.contains("active")) {
+		// 		channels[i].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[i].value), audioCtx.currentTime);
+		// 		channels[i].mute = false;
+		// 		input.classList.remove("active");
+		// 	}
+		// 	else {
+		// 		channels[i].channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
+		// 		channels[i].mute = true;
+		// 		input.classList.add("active");
+		// 	}
+		// });
 	});
 
 
 	soloInput.forEach(function(input, i){
-		input.addEventListener("click", function () {
+		delegateEvent(document, "click", ".solo", function () {
 			if (input.classList.contains("active")) {
 				for (var j = 0; j < index; j++) {
 					channels[j].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[j].value), audioCtx.currentTime);
@@ -324,7 +398,7 @@ function setKnobControlListeners() {
 				soloInput[i].classList.remove("active");
 			}
 			else {
-				for(var j=0; j<index; j++){
+				for (var j = 0; j < index; j++) {
 					channels[j].channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
 					channels[j].mute = true;
 					soloInput[j].classList.remove("active");
@@ -334,54 +408,98 @@ function setKnobControlListeners() {
 				soloInput[i].classList.add("active");
 			}
 		});
+		// input.addEventListener("click", function () {
+		// 	if (input.classList.contains("active")) {
+		// 		for (var j = 0; j < index; j++) {
+		// 			channels[j].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[j].value), audioCtx.currentTime);
+		// 			channels[j].mute = false;
+		// 		}
+		// 		soloInput[i].classList.remove("active");
+		// 	}
+		// 	else {
+		// 		for(var j=0; j<index; j++){
+		// 			channels[j].channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
+		// 			channels[j].mute = true;
+		// 			soloInput[j].classList.remove("active");
+		// 		}
+		// 		channels[i].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[i].value), audioCtx.currentTime);
+		// 		channels[i].mute = false;
+		// 		soloInput[i].classList.add("active");
+		// 	}
+		// });
 	});
 	
 	channelVolumeInput.forEach(function (input, i) {
-		input.addEventListener("input", function () {
+		delegateEvent(document, "input", ".channel-volume", function () {
 			if (channels[i].mute === false) channels[i].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[i].value), audioCtx.currentTime);
-		});
+		});	
+		// input.addEventListener("input", function () {
+		// 	if (channels[i].mute === false) channels[i].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[i].value), audioCtx.currentTime);
+		// });
 	});
 
 	initGainInput.forEach(function (input, i) {
-		input.addEventListener("input", function () {
+		delegateEvent(document, "input", ".gain", function () {
 			channels[i].preAmp.gain.value = dBFSToGain(initGainInput[i].value);
-		})
+		});
+
+		// input.addEventListener("input", function () {
+		// 	channels[i].preAmp.gain.value = dBFSToGain(initGainInput[i].value);
+		// })
 	});
 
 	hiEQ.forEach(function (input, i) {
-		input.addEventListener("input", function () {
+		delegateEvent(document, "input", ".high-gain", function () {
 			channels[i].hiEQControl.gain.value = hiEQ[i].value;
-		})
+		});
+		// input.addEventListener("input", function () {
+		// 	channels[i].hiEQControl.gain.value = hiEQ[i].value;
+		// })
 	});
 
 	loEQ.forEach(function (input, i) {
-		input.addEventListener("input", function () {
+		delegateEvent(document, "input", ".low-gain", function () {
 			channels[i].loEQControl.gain.value = loEQ[i].value;
-		})
+		});
+		// input.addEventListener("input", function () {
+		// 	channels[i].loEQControl.gain.value = loEQ[i].value;
+		// })
 	});
 
 	hi_midFreq.forEach(function (input, i) {
-		input.addEventListener("input", function () {
+		delegateEvent(document, "input", ".hm-freq-gain", function () {
 			channels[i].hi_midEQControl.frequency.value = hi_midFreq[i].value;
-		})
+		});
+		// input.addEventListener("input", function () {
+		// 	channels[i].hi_midEQControl.frequency.value = hi_midFreq[i].value;
+		// })
 	});
 
 	hi_midBoost.forEach(function (input, i) {
-		input.addEventListener("input", function () {
+		delegateEvent(document, "input", ".hm-boost-gain", function () {
 			channels[i].hi_midEQControl.gain.value = hi_midBoost[i].value;
-		})
+		});
+		// input.addEventListener("input", function () {
+		// 	channels[i].hi_midEQControl.gain.value = hi_midBoost[i].value;
+		// })
 	});
 
 	lo_midFreq.forEach(function (input, i) {
-		input.addEventListener("input", function () {
+		delegateEvent(document, "input", ".lm-freq-gain", function () {
 			channels[i].lo_midEQControl.frequency.value = lo_midFreq[i].value;
-		})
+		});
+		// input.addEventListener("input", function () {
+		// 	channels[i].lo_midEQControl.frequency.value = lo_midFreq[i].value;
+		// })
 	});
 
 	lo_midBoost.forEach(function (input, i) {
-		input.addEventListener("input", function () {
+		delegateEvent(document, "input", ".lm-boost-gain", function () {
 			channels[i].lo_midEQControl.gain.value = lo_midBoost[i].value;
-		})
+		});
+		// input.addEventListener("input", function () {
+		// 	channels[i].lo_midEQControl.gain.value = lo_midBoost[i].value;
+		// })
 	});
 
 	masterVolumeIn.addEventListener("input", function () {
@@ -390,16 +508,17 @@ function setKnobControlListeners() {
 
 	busGroups.forEach(function (input, index) {
 		for (var i = 0; i < input.elements.length; i++) {
-			input.elements[i].addEventListener("click", function () {
+
+			delegateEvent(document, "click", ".busOption", function () {
 				resetChanneltoBusConnection(index);
-				if (this.value === "1-2") {
+				if (this.value === "1-2 send") {
 					busses[1].merger.disconnect();
 
 					channels[index].splitter.connect(busses[0].leftGain, 0, 0);
 					channels[index].splitter.connect(busses[0].rightGain, 1, 0);
 					setBusToMain(0);
 				}
-				else if (this.value === "3-4") {
+				else if (this.value === "3-4 send") {
 					busses[0].merger.disconnect();
 
 					channels[index].splitter.connect(busses[1].leftGain, 0, 0);
@@ -411,9 +530,32 @@ function setKnobControlListeners() {
 					channels[index].channelFader.connect(masterChannel);
 				}
 			});
+
+			// input.elements[i].addEventListener("click", function () {
+			// 	resetChanneltoBusConnection(index);
+			// 	if (this.value === "1-2 send") {
+			// 		busses[1].merger.disconnect();
+
+			// 		channels[index].splitter.connect(busses[0].leftGain, 0, 0);
+			// 		channels[index].splitter.connect(busses[0].rightGain, 1, 0);
+			// 		setBusToMain(0);
+			// 	}
+			// 	else if (this.value === "3-4 send") {
+			// 		busses[0].merger.disconnect();
+
+			// 		channels[index].splitter.connect(busses[1].leftGain, 0, 0);
+			// 		channels[index].splitter.connect(busses[1].rightGain, 1, 0);
+
+			// 		setBusToMain(1);
+			// 	}
+			// 	else {
+			// 		channels[index].channelFader.connect(masterChannel);
+			// 	}
+			// });
 		}
 	});
 
+	// if busses are dynamically added/removed, add event listeners through delegateEvent()
 	busPanIn.forEach(function (input, i) {
 		input.addEventListener("input", function () {
 			busses[i].busPan.pan.setValueAtTime(input.value, audioCtx.currentTime);
@@ -431,6 +573,11 @@ function setKnobControlListeners() {
 		});
 	});
 }
+
+/*
+*	Helper functions
+*
+*/
 function resetChanneltoBusConnection(i) {
 	channels[i].channelFader.disconnect();
 	channels[i].splitter.disconnect();
@@ -480,4 +627,16 @@ function closestByClass(el, clazz) {
 
 	// Then return the matched element
 	return el;
+}
+
+function delegateEvent(el, evt, sel, handler) {
+	el.addEventListener(evt, function (event) {
+		var t = event.target;
+		while (t && t !== this) {
+			if (t.matches(sel)) {
+				handler.call(t, event);
+			}
+			t = t.parentNode;
+		}
+	});
 }

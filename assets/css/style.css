@@ -8,7 +8,7 @@ body{
 	width:11.11vw;
 	height:95vh;
 	float:left;
-	position: relative;
+	position:relative;
 }
 .fades{
 	position: absolute;
