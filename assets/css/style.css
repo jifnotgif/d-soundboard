@@ -37,10 +37,12 @@ input,button{
 	display: inline-block;
 	vertical-align: top;
 }
-.active{
+.active-mute{
 	background-color: red;
 }
-
+.active-solo{
+	background-color:blue;
+}
 .filein{
 	opacity:0;
 	display:none;

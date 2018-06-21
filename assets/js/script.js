@@ -167,36 +167,35 @@ function addChannel(index) {
 		});
 
 		this.muteInput.addEventListener("click", function(){
-			if (this.classList.contains("active")) {
+			if (this.classList.contains("active-mute")) {
 				newChannel.channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.value), audioCtx.currentTime);
 				newChannel.mute = false;
-				this.classList.remove("active");
+				this.classList.remove("active-mute");
 			}
 			else {
 				newChannel.channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
 				newChannel.mute = true;
-				this.classList.add("active");
+				this.classList.add("active-mute");
 			}
 		});
 
-		//fix
 		this.soloInput.addEventListener("click", function(){
-			if (this.classList.contains("active")) {
+			if (this.classList.contains("active-solo")) {
 				for (var j = 0; j < channelCounter; j++) {
-					channels[j].channelFader.gain.setValueAtTime(dBFSToGain(channelVolumeInput[j].value), audioCtx.currentTime);
+					channels[j].channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.value), audioCtx.currentTime);
 					channels[j].mute = false;
 				}
-				this.classList.remove("active");
+				this.classList.remove("active-solo");
 			}
 			else {
 				for (var j = 0; j < channelCounter; j++) {
 					channels[j].channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
 					channels[j].mute = true;
-					soloInput[j].classList.remove("active");
+					channels[j].channelHTMLNode.soloInput.classList.remove("active-solo");
 				}
 				newChannel.channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.value), audioCtx.currentTime);
 				newChannel.mute = false;
-				this.classList.add("active");
+				this.classList.add("active-solo");
 			}
 		});
 
@@ -226,6 +225,7 @@ function addChannel(index) {
 		this.lo_midBoost.addEventListener("input", function () {
 			newChannel.lo_midEQControl.gain.value = this.value;
 		});
+		// for each button in channel send
 		for(var k =0; k< newChannel.channelHTMLNode.busGroups.elements.length; k++){
 			this.busGroups.elements[k].addEventListener("click", function(){
 				resetChanneltoBusConnection(index);
