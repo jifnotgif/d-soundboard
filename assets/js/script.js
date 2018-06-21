@@ -182,8 +182,14 @@ function addChannel(index) {
 		this.soloInput.addEventListener("click", function(){
 			if (this.classList.contains("active-solo")) {
 				for (var j = 0; j < channelCounter; j++) {
-					channels[j].channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.value), audioCtx.currentTime);
-					channels[j].mute = false;
+					if(channels[j].channelHTMLNode.muteInput.classList.contains("active-mute")){
+						channels[j].channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
+						channels[j].mute = true;
+					}
+					else{
+						channels[j].channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.value), audioCtx.currentTime);
+						channels[j].mute = false;
+					}
 				}
 				this.classList.remove("active-solo");
 			}
@@ -196,6 +202,7 @@ function addChannel(index) {
 				newChannel.channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.value), audioCtx.currentTime);
 				newChannel.mute = false;
 				this.classList.add("active-solo");
+				newChannel.channelHTMLNode.muteInput.classList.remove("active-mute");
 			}
 		});
 
@@ -204,40 +211,40 @@ function addChannel(index) {
 		});
 
 		this.initGainInput.addEventListener("input",function(){
-			newChannel.preAmp.gain.value = dBFSToGain(this.value);
+			newChannel.preAmp.gain.setValueAtTime(dBFSToGain(this.value),audioCtx.currentTime);
 		});
 
 		this.hiEQ.addEventListener("input",function(){
-			newChannel.hiEQControl.gain.value = this.value;
+			newChannel.hiEQControl.gain.setValueAtTime(this.value, audioCtx.currentTime);
 		});
 		this.loEQ.addEventListener("input", function () {
-			newChannel.loEQControl.gain.value = this.value;
+			newChannel.loEQControl.gain.setValueAtTime(this.value, audioCtx.currentTime);
 		});
 		this.hi_midFreq.addEventListener("input",function(){
 			newChannel.hi_midEQControl.frequency.value = this.value;
 		});
 		this.hi_midBoost.addEventListener("input",function(){
-			newChannel.hi_midEQControl.gain.value = this.value;
+			newChannel.hi_midEQControl.gain.setValueAtTime(this.value, audioCtx.currentTime);
 		});
 		this.lo_midFreq.addEventListener("input", function () {
 			newChannel.lo_midEQControl.frequency.value = this.value;
 		});
 		this.lo_midBoost.addEventListener("input", function () {
-			newChannel.lo_midEQControl.gain.value = this.value;
+			newChannel.lo_midEQControl.gain.setValueAtTime(this.value, audioCtx.currentTime);
 		});
 		// for each button in channel send
 		for(var k =0; k< newChannel.channelHTMLNode.busGroups.elements.length; k++){
 			this.busGroups.elements[k].addEventListener("click", function(){
 				resetChanneltoBusConnection(index);
 				if (this.value === "1-2 send") {
-					busses[1].merger.disconnect();
+					// busses[1].merger.disconnect();
 
 					newChannel.splitter.connect(busses[0].leftGain, 0, 0);
 					newChannel.splitter.connect(busses[0].rightGain, 1, 0);
 					setBusToMain(0);
 				}
 				else if (this.value === "3-4 send") {
-					busses[0].merger.disconnect();
+					// busses[0].merger.disconnect();
 
 					newChannel.splitter.connect(busses[1].leftGain, 0, 0);
 					newChannel.splitter.connect(busses[1].rightGain, 1, 0);
@@ -257,21 +264,21 @@ function addChannel(index) {
 
 
 		this.initGainInput.value = 0;
-		newChannel.preAmp.gain.value = dBFSToGain(this.initGainInput.value);
+		newChannel.preAmp.gain.setValueAtTime(dBFSToGain(this.initGainInput.value), audioCtx.currentTime);
 
 		this.hiEQ.value = 0;
-		newChannel.hiEQControl.gain.value = this.hiEQ.value;
+		newChannel.hiEQControl.gain.setValueAtTime(this.hiEQ.value, audioCtx.currentTime);
 		this.loEQ.value = 0;
-		newChannel.loEQControl.gain.value = this.loEQ.value;
+		newChannel.loEQControl.gain.setValueAtTime(this.loEQ.value, audioCtx.currentTime);
 
 		this.hi_midFreq.value = 6775;
 		newChannel.hi_midEQControl.frequency.value = this.hi_midFreq.value;
 		this.hi_midBoost.value = 0;
-		newChannel.hi_midEQControl.gain.value = this.hi_midBoost.value;
+		newChannel.hi_midEQControl.gain.setValueAtTime(this.hi_midBoost.value, audioCtx.currentTime);
 		this.lo_midFreq.value = 1070;
 		newChannel.lo_midEQControl.frequency.value = this.lo_midFreq.value;
 		this.lo_midBoost.value = 0;
-		newChannel.lo_midEQControl.gain.value = this.lo_midBoost.value;
+		newChannel.lo_midEQControl.gain.setValueAtTime(this.lo_midBoost.value, audioCtx.currentTime);
 
 		this.panInput.value = 0;
 		newChannel.panNode.pan.value = this.panInput.value;
@@ -381,7 +388,7 @@ function getAverageVolume(array) {
 function setNonChannelListeners() {
 
 	masterVolumeIn.addEventListener("input", function () {
-		masterChannel.gain.value = dBFSToGain(masterVolumeIn.value);
+		masterChannel.gain.setValueAtTime(dBFSToGain(masterVolumeIn.value),audioCtx.currentTime);
 	});
 
 	// busGroups.forEach(function (input, index) {
@@ -442,12 +449,12 @@ function setNonChannelListeners() {
 
 	busLeftVolumeIn.forEach(function (input, i) {
 		input.addEventListener("input", function () {
-			busses[i].leftGain.gain.value = dBFSToGain(busLeftVolumeIn[i].value);
+			busses[i].leftGain.gain.setValueAtTime(dBFSToGain(busLeftVolumeIn[i].value),audioCtx.currentTime);
 		});
 	});
 	busRightVolumeIn.forEach(function (input, i) {
 		input.addEventListener("input", function () {
-			busses[i].rightGain.gain.value = dBFSToGain(busRightVolumeIn[i].value);
+			busses[i].rightGain.gain.setValueAtTime(dBFSToGain(busRightVolumeIn[i].value), audioCtx.currentTime);
 		});
 	});
 }
