@@ -1,37 +1,75 @@
-//NOTE: one change to make: start out with one channel only. add option to add or remove channels
-
-
-// window.addEventListener('load', init, false);
 
 var AudioContext = window.AudioContext || window.webkitAudioContext;
 var audioCtx = new AudioContext();
 
-
-var busPanIn = document.querySelectorAll(".pan-bus");
-var busLeftVolumeIn = document.querySelectorAll(".left-bus-volume");
-var busRightVolumeIn = document.querySelectorAll(".right-bus-volume");
-
-var masterVolumeIn = document.querySelector("#master-volume");
-
-var channels = [], sources = [], busses = [], uploadedFiles = [];
-
+var masterChannel = audioCtx.createGain();
+var maxChannels = 5;
+var channelCounter = 0, fullBoard = false;
+var busCounter = 0;
+var channels = [], sources = [], busses = [];
 
 busses[0] = createNewBus();
 busses[1] = createNewBus();
-
-var masterChannel = audioCtx.createGain();
-var maxChannels = 5;
-var channelCounter = 0; 
 setNonChannelListeners();
 
-var busCounter = 0;
-delegateEvent(document, "click", "#addbtn", function(){
+for (var i = 0; i < busses.length; i++) {
+	busses[i].busHTMLNode= {
+		'busPanIn' : $(".bus-pan"),
+		'busLeftVolumeIn' : $(".left-bus"),
+		'busRightVolumeIn' : $(".right-bus")
+	}
+
+
+	noUiSlider.create(busses[i].busHTMLNode.busLeftVolumeIn[i], {
+		start: [-100],
+		connect: [true, true],
+		orientation: "vertical",
+		direction: "rtl",
+		range: {
+			'min': -100,
+			'5%': -60,
+			'10%': -50,
+			'15%': -40,
+			'25%': -30,
+			'35%': -20,
+			'55%': -10,
+			'75%': 0,
+			'90%': 5,
+			'max': 10,
+		}
+	});
+	noUiSlider.create(busses[i].busHTMLNode.busRightVolumeIn[i], {
+		start: [-100],
+		connect: [true, true],
+		orientation: "vertical",
+		direction: "rtl",
+		range: {
+			'min': -100,
+			'5%': -60,
+			'10%': -50,
+			'15%': -40,
+			'25%': -30,
+			'35%': -20,
+			'55%': -10,
+			'75%': 0,
+			'90%': 5,
+			'max': 10,
+		}
+	});
+} 
+
+// code breaks if abstracted to loop. make unique event listeners for each bus.
+busListenerFunctions(0);
+busListenerFunctions(1);
+
+delegateEvent(document, "click", "#filler", function(){
 	var htmlData = {
 		busName: busCounter++
 	}
 	var chTemplate = document.getElementById("channel-template").innerHTML;
 	if (channelCounter === maxChannels - 1) {
-		document.getElementById("addbtn").remove();
+		document.getElementById("filler").style.visibility = 'hidden';
+		fullBoard = !fullBoard;
 	}
 
 	var html = Mustache.render(chTemplate, htmlData);
@@ -41,11 +79,13 @@ delegateEvent(document, "click", "#addbtn", function(){
 	// also... eventlisteners are destroyed upon creating new nodes
 	// document.getElementById("test").appendChild(htmlElement);
 	document.getElementById("empty").outerHTML = html;
-
 	addChannel(channelCounter);
 
+	// $(".dial").knob();
+	
 	channels[channelCounter].channelHTMLNode.initListeners();
 	channelCounter++;	
+
 
 });
 
@@ -84,21 +124,86 @@ function addChannel(index) {
 	newChannel.channelHTMLNode.audioSource = document.querySelectorAll(".audio-in")[index];
 
 
-	newChannel.channelHTMLNode.initGainInput = document.querySelectorAll(".gain")[index];
+	newChannel.channelHTMLNode.initGainInput = $(".gain").eq(index).knob(
+		{
+			'change': function (value) {
+				newChannel.preAmp.gain.setValueAtTime(dBFSToGain(value), audioCtx.currentTime);
+			}
+		});
+	
 
-	newChannel.channelHTMLNode.hiEQ = document.querySelectorAll(".high-gain")[index];
-	newChannel.channelHTMLNode.loEQ = document.querySelectorAll(".low-gain")[index];
-	newChannel.channelHTMLNode.hi_midFreq = document.querySelectorAll(".hm-freq-gain")[index];
-	newChannel.channelHTMLNode.hi_midBoost = document.querySelectorAll(".hm-boost-gain")[index];
-	newChannel.channelHTMLNode.lo_midFreq = document.querySelectorAll(".lm-freq-gain")[index];
-	newChannel.channelHTMLNode.lo_midBoost = document.querySelectorAll(".lm-boost-gain")[index];
 
+	newChannel.channelHTMLNode.hiEQ = $(".high-gain").eq(index).knob(
+		{
+			'change': function (value) {
+				newChannel.hiEQControl.gain.setValueAtTime(value, audioCtx.currentTime);
+			}
+		});
+	newChannel.channelHTMLNode.loEQ = $(".low-gain").eq(index).knob(
+		{
+			'change': function (value) {
+				newChannel.loEQControl.gain.setValueAtTime(value, audioCtx.currentTime);
+			}
+		});
 
-	newChannel.channelHTMLNode.panInput = document.querySelectorAll(".pan")[index];
+	newChannel.channelHTMLNode.hi_midFreq = $(".hm-freq-gain").eq(index).knob(
+		{
+			'change': function (value) {
+				newChannel.hi_midEQControl.frequency.value = value;
+			}
+		});
+	newChannel.channelHTMLNode.hi_midBoost = $(".hm-boost-gain").eq(index).knob(
+		{
+			'change': function (value) {
+				newChannel.hi_midEQControl.gain.setValueAtTime(value, audioCtx.currentTime);
+			}
+		});
+	newChannel.channelHTMLNode.lo_midFreq = $(".lm-freq-gain").eq(index).knob(
+		{
+			'change': function (value) {
+				newChannel.lo_midEQControl.frequency.value = value;
+			}
+		});
+		
+	newChannel.channelHTMLNode.lo_midBoost = $(".lm-boost-gain").eq(index).knob(
+		{
+			'change': function (value) {
+				newChannel.lo_midEQControl.gain.setValueAtTime(value, audioCtx.currentTime);
+			}
+		});
+	
+
+	// newChannel.channelHTMLNode.panInput = document.querySelectorAll(".pan")[index];
+	newChannel.channelHTMLNode.panInput = $(".channel-pan").eq(index).knob(
+		{
+			'change':function(value){
+				newChannel.panNode.pan.setValueAtTime(value, audioCtx.currentTime);
+			}
+		});
 	newChannel.channelHTMLNode.muteInput = document.querySelectorAll(".mute")[index];
 	newChannel.channelHTMLNode.soloInput = document.querySelectorAll(".solo")[index];
-
-	newChannel.channelHTMLNode.channelVolumeInput = document.querySelectorAll(".channel-volume")[index];
+	
+	var slider = document.getElementsByClassName("sliders")[channelCounter];
+	newChannel.channelHTMLNode.channelVolumeInput = slider;
+	
+	noUiSlider.create(slider, {
+		start: [-100],
+		connect: [true, true],
+		orientation: "vertical",
+		direction: "rtl",
+		range: {
+			'min': -100,
+			'5%': -60,
+			'10%': -50,
+			'15%': -40,
+			'25%': -30,
+			'35%': -20,
+			'55%': -10,
+			'75%': 0,
+			'90%': 5,
+			'max': 10,
+		}
+	});
 
 	newChannel.channelHTMLNode.busGroups = document.querySelectorAll("fieldset")[index];
 	newChannel.channelHTMLNode.fileUploadOption = document.querySelectorAll(".filein")[index];
@@ -127,7 +232,7 @@ function addChannel(index) {
 
 	newChannel.channelHTMLNode.initListeners = function() {
 		this.removeBtn.addEventListener("click",function(){
-			if (sources.length > 0) {
+			if (sources.length > 0 && sources[index] ) {
 				sources[index].stop();
 				delete sources[index];
 			}
@@ -135,8 +240,9 @@ function addChannel(index) {
 			closestByClass(this, "channel").remove();
 			channelCounter--;
 			// if DOM can't locate add button (max channels reached and removed)
-			if (channelCounter === maxChannels - 1 && document.getElementById("addbtn") === null) {
-				document.getElementById("add").innerHTML = "<i id=\"addbtn\" class=\"fas fa-plus\"></i>";
+			if (channelCounter === maxChannels - 1 && fullBoard) {
+				document.getElementById("filler").style.visibility = 'visible';
+				fullBoard = !fullBoard;
 			}
 		});
 		this.audioSource.addEventListener("change", function(){
@@ -162,13 +268,13 @@ function addChannel(index) {
 				};
 		});
 
-		this.panInput.addEventListener("input", function(){
-			newChannel.panNode.pan.setValueAtTime(this.value, audioCtx.currentTime);
-		});
+		// this.panInput.addEventListener("input", function(){
+		// 	newChannel.panNode.pan.setValueAtTime(this.value, audioCtx.currentTime);
+		// });
 
 		this.muteInput.addEventListener("click", function(){
 			if (this.classList.contains("active-mute")) {
-				newChannel.channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.value), audioCtx.currentTime);
+				newChannel.channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.noUiSlider.get()), audioCtx.currentTime);
 				newChannel.mute = false;
 				this.classList.remove("active-mute");
 			}
@@ -187,7 +293,7 @@ function addChannel(index) {
 						channels[j].mute = true;
 					}
 					else{
-						channels[j].channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.value), audioCtx.currentTime);
+						channels[j].channelFader.gain.setValueAtTime(dBFSToGain(channels[j].channelHTMLNode.channelVolumeInput.noUiSlider.get()), audioCtx.currentTime);
 						channels[j].mute = false;
 					}
 				}
@@ -199,39 +305,42 @@ function addChannel(index) {
 					channels[j].mute = true;
 					channels[j].channelHTMLNode.soloInput.classList.remove("active-solo");
 				}
-				newChannel.channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.value), audioCtx.currentTime);
+				newChannel.channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.noUiSlider.get()), audioCtx.currentTime);
 				newChannel.mute = false;
 				this.classList.add("active-solo");
 				newChannel.channelHTMLNode.muteInput.classList.remove("active-mute");
 			}
 		});
 
-		this.channelVolumeInput.addEventListener("input", function(){
-			if (newChannel.mute === false) newChannel.channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.value), audioCtx.currentTime);
-		});
+		newChannel.channelHTMLNode.channelVolumeInput.noUiSlider.on('update', function (value) {
+			if(newChannel.mute === false) newChannel.channelFader.gain.setValueAtTime(dBFSToGain(value[0]), audioCtx.currentTime);
+		})
+		// this.channelVolumeInput.addEventListener("input", function(){
+		// 	if (newChannel.mute === false) newChannel.channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.value), audioCtx.currentTime);
+		// });
 
-		this.initGainInput.addEventListener("input",function(){
-			newChannel.preAmp.gain.setValueAtTime(dBFSToGain(this.value),audioCtx.currentTime);
-		});
+		// this.initGainInput.addEventListener("input",function(){
+		// 	newChannel.preAmp.gain.setValueAtTime(dBFSToGain(this.value),audioCtx.currentTime);
+		// });
 
-		this.hiEQ.addEventListener("input",function(){
-			newChannel.hiEQControl.gain.setValueAtTime(this.value, audioCtx.currentTime);
-		});
-		this.loEQ.addEventListener("input", function () {
-			newChannel.loEQControl.gain.setValueAtTime(this.value, audioCtx.currentTime);
-		});
-		this.hi_midFreq.addEventListener("input",function(){
-			newChannel.hi_midEQControl.frequency.value = this.value;
-		});
-		this.hi_midBoost.addEventListener("input",function(){
-			newChannel.hi_midEQControl.gain.setValueAtTime(this.value, audioCtx.currentTime);
-		});
-		this.lo_midFreq.addEventListener("input", function () {
-			newChannel.lo_midEQControl.frequency.value = this.value;
-		});
-		this.lo_midBoost.addEventListener("input", function () {
-			newChannel.lo_midEQControl.gain.setValueAtTime(this.value, audioCtx.currentTime);
-		});
+		// this.hiEQ.addEventListener("input",function(){
+		// 	newChannel.hiEQControl.gain.setValueAtTime(this.value, audioCtx.currentTime);
+		// });
+		// this.loEQ.addEventListener("input", function () {
+		// 	newChannel.loEQControl.gain.setValueAtTime(this.value, audioCtx.currentTime);
+		// });
+		// this.hi_midFreq.addEventListener("input",function(){
+		// 	newChannel.hi_midEQControl.frequency.value = this.value;
+		// });
+		// this.hi_midBoost.addEventListener("input",function(){
+		// 	newChannel.hi_midEQControl.gain.setValueAtTime(this.value, audioCtx.currentTime);
+		// });
+		// this.lo_midFreq.addEventListener("input", function () {
+		// 	newChannel.lo_midEQControl.frequency.value = this.value;
+		// });
+		// this.lo_midBoost.addEventListener("input", function () {
+		// 	newChannel.lo_midEQControl.gain.setValueAtTime(this.value, audioCtx.currentTime);
+		// });
 		// for each button in channel send
 		for(var k =0; k< newChannel.channelHTMLNode.busGroups.elements.length; k++){
 			this.busGroups.elements[k].addEventListener("click", function(){
@@ -259,29 +368,55 @@ function addChannel(index) {
 	};
 
 	newChannel.channelHTMLNode.resetChannelInputSettings = function(){
-		this.channelVolumeInput.value = -50;
+		newChannel.channelHTMLNode.channelVolumeInput.noUiSlider.reset();
 		newChannel.channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
 
-
 		this.initGainInput.value = 0;
-		newChannel.preAmp.gain.setValueAtTime(dBFSToGain(this.initGainInput.value), audioCtx.currentTime);
+		$(".gain").eq(index).val("0");
+		$(".gain").eq(index).trigger("change");
+		newChannel.preAmp.gain.setValueAtTime(dBFSToGain(0), audioCtx.currentTime);
 
 		this.hiEQ.value = 0;
-		newChannel.hiEQControl.gain.setValueAtTime(this.hiEQ.value, audioCtx.currentTime);
+
+		$(".high-gain").eq(index).val("0");
+		$(".high-gain").eq(index).trigger("change");
+		newChannel.hiEQControl.gain.setValueAtTime(0, audioCtx.currentTime);
 		this.loEQ.value = 0;
-		newChannel.loEQControl.gain.setValueAtTime(this.loEQ.value, audioCtx.currentTime);
+
+		$(".low-gain").eq(index).val("0");
+		$(".low-gain").eq(index).trigger("change");
+		newChannel.loEQControl.gain.setValueAtTime(0, audioCtx.currentTime);
 
 		this.hi_midFreq.value = 6775;
-		newChannel.hi_midEQControl.frequency.value = this.hi_midFreq.value;
-		this.hi_midBoost.value = 0;
-		newChannel.hi_midEQControl.gain.setValueAtTime(this.hi_midBoost.value, audioCtx.currentTime);
-		this.lo_midFreq.value = 1070;
-		newChannel.lo_midEQControl.frequency.value = this.lo_midFreq.value;
-		this.lo_midBoost.value = 0;
-		newChannel.lo_midEQControl.gain.setValueAtTime(this.lo_midBoost.value, audioCtx.currentTime);
 
-		this.panInput.value = 0;
-		newChannel.panNode.pan.value = this.panInput.value;
+		$(".hm-freq-gain").eq(index).val("6775");
+		$(".hm-freq-gain").eq(index).trigger("change");
+		newChannel.hi_midEQControl.frequency.value = 6775;
+
+		this.hi_midBoost.value = 0;
+
+		$(".hm-boost-gain").eq(index).val("0");
+		$(".hm-boost-gain").eq(index).trigger("change");
+		newChannel.hi_midEQControl.gain.setValueAtTime(0, audioCtx.currentTime);
+		
+		this.lo_midFreq.value = 990;
+
+		$(".lm-freq-gain").eq(index).val("990");
+		$(".lm-freq-gain").eq(index).trigger("change");
+		newChannel.lo_midEQControl.frequency.value = 990;
+
+
+		this.lo_midBoost.value = 0;
+
+		$(".lm-boost-gain").eq(index).val("0");
+		$(".lm-boost-gain").eq(index).trigger("change");
+		newChannel.lo_midEQControl.gain.setValueAtTime(0, audioCtx.currentTime);
+
+		// this.panInput[0].children[1].setAttribute("data-value","0");
+
+		$(".channel-pan").eq(index).val("0");
+		$(".channel-pan").eq(index).trigger("change");
+		newChannel.panNode.pan.setValueAtTime(0, audioCtx.currentTime);
 
 		if (this.muteInput.classList.contains("active")) {
 			newChannel.mute = false;
@@ -319,7 +454,7 @@ function setChannelProperties(channel, i) {
 	channel.meter;
 	channel.canvas = document.querySelectorAll(".meter")[i].getContext("2d");
 
-	channel.gradient = channel.canvas.createLinearGradient(0, 0, 0, 130);
+	channel.gradient = channel.canvas.createLinearGradient(0, 0, 0, 80);
 	channel.gradient.addColorStop(1, '#00ff00');
 	channel.gradient.addColorStop(0.4, '#ffff00');
 	channel.gradient.addColorStop(0.05, '#ff0000');
@@ -330,7 +465,6 @@ function setChannelProperties(channel, i) {
 		channel.array = new Uint8Array(channel.clipAnalyser.frequencyBinCount);
 		channel.clipAnalyser.getByteFrequencyData(channel.array);
 		var average = channel.getAverageVolume(channel.array);
-
 		// get the average for the second channel
 		channel.array2 = new Uint8Array(channel.clipAnalyser2.frequencyBinCount);
 		channel.clipAnalyser2.getByteFrequencyData(channel.array2);
@@ -338,23 +472,23 @@ function setChannelProperties(channel, i) {
 
 		//here's the volume
 		// clear the current state
-		channel.canvas.clearRect(0, 0, 60, 130);
+		channel.canvas.clearRect(0, 0, 60, 80);
 
 		// set the fill style
 		channel.canvas.fillStyle = channel.gradient;
 
 		// create the meters
-		if (average < 130) {
-			channel.canvas.fillRect(0, 130 - average, 25, 130);
+		if (average < 80) {
+			channel.canvas.fillRect(0, 80 - average, 25, 80);
 		}
 		else {
 			channel.canvas.fillRect(0, 0, 25, 130);
 		}
-		if (average2 < 130) {
-			channel.canvas.fillRect(30, 130 - average2, 25, 130);
+		if (average2 < 80) {
+			channel.canvas.fillRect(30, 80 - average2, 25, 80);
 		}
 		else {
-			channel.canvas.fillRect(30, 0, 25, 130);
+			channel.canvas.fillRect(30, 0, 25, 80);
 		}
 	}
 	channel.getAverageVolume = getAverageVolume;
@@ -385,11 +519,52 @@ function getAverageVolume(array) {
 	return average;
 }
 
+
+function busListenerFunctions(i){
+
+	busses[i].busHTMLNode.busPanIn.eq(i).knob({
+		'change': function (value) {
+			busses[i].busPan.pan.setValueAtTime(value, audioCtx.currentTime);
+		}
+	});
+
+
+	busses[i].busHTMLNode.busLeftVolumeIn[i].noUiSlider.on('update', function (value) {
+		busses[i].leftGain.gain.setValueAtTime(dBFSToGain(value[0]), audioCtx.currentTime);
+	});
+	busses[i].busHTMLNode.busRightVolumeIn[i].noUiSlider.on('update', function (value) {
+		busses[i].rightGain.gain.setValueAtTime(dBFSToGain(value[0]), audioCtx.currentTime);
+	});
+}
 function setNonChannelListeners() {
 
-	masterVolumeIn.addEventListener("input", function () {
-		masterChannel.gain.setValueAtTime(dBFSToGain(masterVolumeIn.value),audioCtx.currentTime);
+	var masterVolumeIn = $("#master-volume")[0];
+		noUiSlider.create(masterVolumeIn, {
+			start: [-100],
+			connect: [true, true],
+			orientation: "vertical",
+			direction: "rtl",
+			range: {
+				'min': -100,
+				'5%': -60,
+				'10%': -50,
+				'15%': -40,
+				'25%': -30,
+				'35%': -20,
+				'55%': -10,
+				'75%': 0,
+				'90%': 5,
+				'max': 10,
+			}
+		});
+	masterVolumeIn.noUiSlider.on('update', function (value) {
+		masterChannel.gain.setValueAtTime(dBFSToGain(value[0]), audioCtx.currentTime);
 	});
+
+	
+	// masterVolumeIn.addEventListener("input", function () {
+	// 	masterChannel.gain.setValueAtTime(dBFSToGain(masterVolumeIn.value),audioCtx.currentTime);
+	// });
 
 	// busGroups.forEach(function (input, index) {
 	// 	for (var i = 0; i < input.elements.length; i++) {
@@ -441,22 +616,23 @@ function setNonChannelListeners() {
 	// });
 
 	// if busses are dynamically added/removed, add event listeners through delegateEvent()
-	busPanIn.forEach(function (input, i) {
-		input.addEventListener("input", function () {
-			busses[i].busPan.pan.setValueAtTime(input.value, audioCtx.currentTime);
-		});
-	});
 
-	busLeftVolumeIn.forEach(function (input, i) {
-		input.addEventListener("input", function () {
-			busses[i].leftGain.gain.setValueAtTime(dBFSToGain(busLeftVolumeIn[i].value),audioCtx.currentTime);
-		});
-	});
-	busRightVolumeIn.forEach(function (input, i) {
-		input.addEventListener("input", function () {
-			busses[i].rightGain.gain.setValueAtTime(dBFSToGain(busRightVolumeIn[i].value), audioCtx.currentTime);
-		});
-	});
+	// busPanIn.forEach(function (input, i) {
+	// 	input.addEventListener("input", function () {
+	// 		busses[i].busPan.pan.setValueAtTime(input.value, audioCtx.currentTime);
+	// 	});
+	// });
+
+	// busLeftVolumeIn.forEach(function (input, i) {
+	// 	input.addEventListener("input", function () {
+	// 		busses[i].leftGain.gain.setValueAtTime(dBFSToGain(busLeftVolumeIn[i].value),audioCtx.currentTime);
+	// 	});
+	// });
+	// busRightVolumeIn.forEach(function (input, i) {
+	// 	input.addEventListener("input", function () {
+	// 		busses[i].rightGain.gain.setValueAtTime(dBFSToGain(busRightVolumeIn[i].value), audioCtx.currentTime);
+	// 	});
+	// });
 }
 
 /*

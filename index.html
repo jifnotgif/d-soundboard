@@ -2,68 +2,76 @@
 <html>
 
 <head>
-
+	<meta name="viewport" content="initial-scale=1">	
 	<meta charset="utf-8" />
-	<title>Virtual Soundboard</title>
+	<title>Digital Soundboard</title>
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB"
 	 crossorigin="anonymous">
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp"
 	 crossorigin="anonymous">
+	<link rel="stylesheet" href="assets/ext-libraries/nouislider/nouislider.min.css">
+	<link href="https://fonts.googleapis.com/css?family=Orbitron" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="assets/css/input.css">
 	<link rel="stylesheet" type="text/css" href="assets/css/style.css">
 
 </head>
 
 <body>
 	<div class="container-fluid">
-		
 		<div id="empty">
 
 		</div>
-		<div id="add">
-			<i id="addbtn" class="fas fa-plus"></i>
+
+		<div id="filler"><i id="addbtn" class="fas fa-plus">
+		</i>
 		</div>
-
-		<div class="fill"></div>
-
+		<div id="add">
+		</div>
 
 		<div class="channel bus">
 			<h1>BUS 1-2</h1>
-			<label>
-				<input class="pan-bus" type="range" min="-1" max="1" step="0.1" value="0"> Pan
-			</label>
-			<div class="fades">
-				<label>
-					<input type="range" min="-50" max="10" value="1" step=".01" class="fader-slider left-bus-volume"> L
-				</label>
-				<label>
-					<input type="range" min="-50" max="10" value="1" step=".01" class="fader-slider right-bus-volume"> R
-				</label>
+			<div class="knob-label">
+				<label>Pan</label>
+			</div>
+			<input type="text" data-displayInput=false data-angleOffset="210" data-fgColor="red" data-bgColor="#161616" data-angleArc="300" data-cursor=10 data-value="0" value="0" class="dial bus-pan"
+			 data-width="45%" data-height="100%" data-min="-1" data-max="1" data-step="0.1">
+			<div class="fades nonCh-fade">
+				<label>L</label>
+				<div class="noUi-target noUi-ltr noUi-vertical left-bus"></div>
+				<label>R</label>
+				<div class="noUi-target noUi-ltr noUi-vertical right-bus"></div>
 			</div>
 		</div>
 
 		<div class="channel bus">
 			<h1>BUS 3-4</h1>
-			<label>
-				<input class="pan-bus" type="range" min="-1" max="1" step="0.1" value="0"> Pan
-			</label>
-			<div class="fades">
+
+			<div class="knob-label">
+				<label>Pan</label>
+			</div>
+			<input type="text" data-displayInput=false data-angleOffset="210" data-fgColor="red" data-bgColor="#161616" data-angleArc="300" data-cursor=10 data-value="0" value="0" class="dial bus-pan"
+			 data-width="45%" data-height="100%" data-min="-1" data-max="1" data-step="0.1">
+			<div class="fades nonCh-fade">
 				<label>
-					<input type="range" min="-50" max="10" value="1" step=".01" class="fader-slider left-bus-volume"> L</label>
+					L</label><div class="noUi-target noUi-ltr noUi-vertical left-bus">
+					</div>
 				<label>
-					<input type="range" min="-50" max="10" value="1" step=".01" class="fader-slider right-bus-volume"> R</label>
+					 R</label><div class="noUi-target noUi-ltr noUi-vertical right-bus"></div>
 			</div>
 		</div>
 
 		<div class="channel master">
-			<label> LEFT/RIGHT MIX
-				<input type="range" min="-50" max="10" value="0" step=".01" id="master-volume">
-			</label>
+			<h1> LEFT/RIGHT MIX
+				
+			</h1>
+			<div class="fades nonCh-fade">
+				<div id="master-volume" class="noUi-target noUi-ltr noUi-vertical">
+			</div>
+			</div>
 		</div>
 
 	</div>
 
-	<!-- <div id="audio"></div> -->
-	<!-- <script type="text/javascript" src="assets/js/volume-meter.js"></script> -->
 	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
 	 crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
@@ -73,87 +81,150 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.3.0/mustache.min.js"></script>
 	<script id="channel-template" type="text/template">
 		<div class="channel">
-			<div class="input-source">
+			<div class="input-source container">
+				<div class ="channel-head">
 				<input type="file" class="filein" accept=".mp3, .wav, .ogg" />
-				<div class="channel-head">
-						<select class="audio-in">
-						<option disabled selected value="none" style="display:none">input source</option>
-						<option value="new_file">upload new</option>
-						<option disabled>--BASS--</option>
-						<option value="assets\sounds\bass\deephousebass.ogg"> Deep House </option>
-						<option value="assets\sounds\bass\electrofunkbass.ogg">Electro Funk</option>
-						<option value="assets\sounds\bass\hiphopbass.ogg">Hip-Hop</option>
-						<option value="assets\sounds\bass\housebass.ogg">House 1 </option>
-						<option value="assets\sounds\bass\housebass2.ogg">House 2</option>
-						<option disabled>--DRUMS--</option>
-						<option value="assets\sounds\drums\deephousebeat.ogg"> Deep House 1</option>
-						<option value="assets\sounds\drums\deephousebeat2.ogg"> Deep House 2</option>
-						<option value="assets\sounds\drums\classicbeat.ogg"> Hip-Hop 1</option>
-						<option value="assets\sounds\drums\hiphopbeat.ogg"> Hip-Hop 2</option>
-						<option value="assets\sounds\drums\housebeat.ogg"> House </option>
-						<option value="assets\sounds\drums\trapdrums.ogg">Trap</option>
-						<option disabled>--GUITAR--</option>
-						<option value="assets\sounds\guitar\guitar.ogg"> Electric 1 </option>
-						<option value="assets\sounds\guitar\rockelectric.ogg"> Electric 2</option>
-						<option disabled>--KEYS--</option>
-						<option value="assets\sounds\keys\electrofunksynth.ogg"> Synth </option>
-						<option value="assets\sounds\keys\funkorgan.ogg"> Organ </option>
-						<option value="assets\sounds\keys\rnbkeys.ogg"> RnB Piano </option>
-					</select>
-				<i class="far fa-minus-square fa-lg"></i>
+						<select class="audio-in col-11">
+								<option disabled selected value="none" style="display:none">input src</option>
+								<option value="new_file">upload new</option>
+								<option disabled>--BASS--</option>
+								<option value="assets\sounds\bass\deephousebass.ogg"> Deep House </option>
+								<option value="assets\sounds\bass\electrofunkbass.ogg">Electro Funk</option>
+								<option value="assets\sounds\bass\hiphopbass.ogg">Hip-Hop</option>
+								<option value="assets\sounds\bass\housebass.ogg">House 1 </option>
+								<option value="assets\sounds\bass\housebass2.ogg">House 2</option>
+								<option disabled>--DRUMS--</option>
+								<option value="assets\sounds\drums\deephousebeat.ogg"> Deep House 1</option>
+								<option value="assets\sounds\drums\deephousebeat2.ogg"> Deep House 2</option>
+								<option value="assets\sounds\drums\classicbeat.ogg"> Hip-Hop 1</option>
+								<option value="assets\sounds\drums\hiphopbeat.ogg"> Hip-Hop 2</option>
+								<option value="assets\sounds\drums\housebeat.ogg"> House </option>
+								<option value="assets\sounds\drums\trapdrums.ogg">Trap</option>
+								<option disabled>--GUITAR--</option>
+								<option value="assets\sounds\guitar\guitar.ogg"> Electric 1 </option>
+								<option value="assets\sounds\guitar\rockelectric.ogg"> Electric 2</option>
+								<option disabled>--KEYS--</option>
+								<option value="assets\sounds\keys\electrofunksynth.ogg"> Synth </option>
+								<option value="assets\sounds\keys\funkorgan.ogg"> Organ </option>
+								<option value="assets\sounds\keys\rnbkeys.ogg"> RnB Piano </option>
+						</select>
+						<i class="far fa-minus-square fa-lg remove"></i>	
+				
 			</div>
-				<p>Audio IN</p>
 			</div>
 
-			<div class="gains">
-				<label>
-					<input type="range" min="0" max="60" value="0" step="0.01" class="gain"> Gain
-				</label>
-
-				<label>
-					<input class="gain-btn high-gain" type="range" min="-15" max="15" step="1" value="0"> High Gain
-				</label>
-
-				<div class="hi-mid-gain-control">
-					<label>
-						<input type="range" min="550" max="13000" value="6775" step="1131.8" class="hm-freq-gain">
-
-						<input type="range" min="-15" max="15" value="0" step="3" class="hm-boost-gain"> HI-MID
-					</label>
+			<div class="gains container">
+				<div class="gain-pair">
+					<div class="knob-label">
+						<label>Gain</label>
+					</div>
+						<input type="text" data-displayInput=false data-cursor=10 data-fgColor="white" data-bgColor="#161616"data-angleOffset="210" data-angleArc="300" value="0"data-value="0"data-step=".01" data-min="0" data-max="60"  class="dial gain" data-width="45%"data-height="100%">
+					
 				</div>
-				<div class="lo-mid-gain-control">
-					<label>
-						<input type="range" min="80" max="1900" value="1070" step="165.5" class="lm-freq-gain">
-
-						<input type="range" min="-15" max="15" value="0" step="3" class="lm-boost-gain"> LO-MID
-					</label>
+				
+				<div class="gain-pair">
+					
+					<div class="knob-label">
+						<label>High-Gain</label>
+					</div>
+					<input type="text" data-displayInput=false data-cursor=10 data-fgColor="blue" data-bgColor="#161616" data-angleOffset="210" data-angleArc="300" data-value="0" value="0" data-step="1" data-min="-15" data-max="15"  class="dial high-gain" data-width="45%"data-height="100%">
+					
 				</div>
-				<label>
-					<input class="gain-btn low-gain" type="range" min="-15" max="15" step="3" value="0"> Low Gain
-				</label>
+				
+
+
+				<div class="mid-gain-control gain-pair">
+					
+					<div class="knob-label">
+						<label>Hi-mid Freq</label>
+					</div>
+						<input type="text" data-displayInput=false data-cursor=10 data-fgColor="blue" data-bgColor="#161616" data-angleOffset="210" data-angleArc="300" data-value="6775"value="6775" data-step="1131.8" data-min="550" data-max="13000"  class="dial hm-freq-gain" data-width="45%"data-height="100%">
+					<div style="width:10%"></div>
+					<div class="knob-label">
+						<label>Hi-mid Gain</label>
+					</div>
+						<input type="text" data-displayInput=false data-cursor=10 data-fgColor="blue" data-bgColor="#161616" data-angleOffset="210" data-angleArc="300" data-value="0"value="0" data-step="3" data-min="-15" data-max="15"  class="dial hm-boost-gain" data-width="45%"data-height="100%">
+					
+				</div>
+				<div class="mid-gain-control gain-pair">
+					
+					<div class="knob-label">
+						<label>Low-mid Freq</label>
+					</div>
+						<input type="text" data-displayInput=false data-cursor=10 data-fgColor="blue" data-bgColor="#161616" data-angleOffset="210" data-angleArc="300" data-value="990" value="990" data-step="165.5" data-min="80" data-max="1900"  class="dial lm-freq-gain" data-width="45%"data-height="100%" >
+					<div style="width:10%"></div>
+				
+					<div class="knob-label">
+						<label>Low-mid Gain</label>
+					</div>
+						<input type="text"data-displayInput=false  data-cursor="10" data-fgColor="blue" data-bgColor="#161616"  data-angleOffset="210" data-angleArc="300" data-value="0"value="0" data-step="3" data-min="-15" data-max="15"  class="dial lm-boost-gain" data-width="45%"data-height="100%">
+					
+			
+				</div>
+				<div class="gain-pair">
+					
+					<div class="knob-label">
+						<label>Low Gain</label>
+					</div>
+					<input type="text" data-displayInput=false data-cursor=10 data-fgColor="blue" data-bgColor="#161616" data-angleOffset="210" data-angleArc="300" data-value="0" value="0"data-step="1" data-min="-15" data-max="15" class="dial low-gain" data-width="45%" data-height="100%">
+					
+				</div>
 
 			</div>
 
-			<div class="volume-meter">
-				<canvas class="meter" width="60" height="130" style="display: block;">
+			<div class="volume-meter container">
+				<canvas class="meter "width="60" height="80" style="display: block;">
 				</canvas>
 			</div>
+			<div class="pan-div container">
+				<div class="gain-pair">
+					
+					<div class="knob-label">
+						<label>Pan</label>
+					</div>
+					<input type="text" data-displayInput=false  data-angleOffset="210" data-fgColor="red" data-bgColor="#161616" data-angleArc="300" data-cursor=10 data-value="0" value="0"class="dial channel-pan" data-width="45%" data-height="100%" data-min="-1" data-max="1" data-step="0.1">
+				
+				</div>
+			</div>
+			<div class="fades container">
 
-			<div class="fades">
+				<!-- <div class="col-8 slider-container">
+				</div> -->
 
-				<label>
-					<input class="pan" type="range" min="-1" max="1" step="0.1" value="0"> Pan
-				</label>
+				<!-- <div class="col-4 clickable-buttons"> -->
+					<div id="fader">
+					<div class="sliders noUi-target noUi-ltr noUi-vertical"></div></div>
+					<div class="fade-opts" >
+							<div class="ch-out-btns">
+							<label>
+								<button class="mute"></button> Mute
+							</label>
+							</div>
 
-				<div class="clickable-buttons">
-					<label>
-						<button class="mute"></button> Mute
-					</label>
-
-					<label>
-						<button class="solo"></button> Solo
-					</label>
-					<div>
+							<div class="ch-out-btns">
+							<label>
+								<button class="solo"></button> Solo
+							</label>
+							</div>
+							
+							<div class="control-group">
+								<fieldset>
+									<label class="control control--radio">1-2
+										<input class="busOption" type="radio" name="bus_{{busName}}" value="1-2 send"> 
+										<div class="control__indicator"></div>
+									</label>
+									<label class="control control--radio">3-4
+										<input class="busOption" type="radio" name="bus_{{busName}}" value="3-4 send"> 
+										<div class="control__indicator"></div>
+									</label>
+									<label class="control control--radio">L-R
+										<input class="busOption" type="radio" name="bus_{{busName}}" value="main send" checked> 
+										<div class="control__indicator"></div>
+									</label>
+								</fieldset>
+							</div>
+					</div>
+					<!-- <div class="ch-out-btns">
 						<fieldset>
 							<label>
 								<input class="busOption" type="radio" name="bus_{{busName}}" value="1-2 send"> 1-2
@@ -165,16 +236,20 @@
 								<input class="busOption" type="radio" name="bus_{{busName}}" value="main send" checked> L-R
 							</label>
 						</fieldset>
-					</div>
+					</div> -->
 				</div>
 
-				<input type="range" min="-50" max="10" value="-50" step=".01" class="channel-volume">
-
-			</div>
+				<input style="display:none" type="range" min="-100" max="10" value="-100" step=".01" class="channel-volume">
+				
+				<!-- </div> -->
+			
 		</div>
 		<div id="empty"></div>
 	</script>
+	<script src="assets/ext-libraries/jQuery-Knob/dist/jquery.knob.min.js"></script>
+	<script type="text/javascript" src="assets/ext-libraries/nouislider/nouislider.min.js"></script>
 	<script type="text/javascript" src="assets/js/script.js"></script>
+	
 </body>
 
 </html>
