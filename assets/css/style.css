@@ -15,7 +15,6 @@ body{
 	width:11.11vw;
 	height:90vh;
 	padding: 0 .5vw;
-	float:left;
 	position:relative;
 	display:inline-block;
 }
