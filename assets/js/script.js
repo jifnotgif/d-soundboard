@@ -271,15 +271,25 @@ function addChannel(index) {
 		// });
 
 		this.muteInput.addEventListener("click", function () {
-			this.classList.toggle("active-mute");
-			if (newChannel.mute === true && isSolo === false) {
-				newChannel.channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.noUiSlider.get()), audioCtx.currentTime);
-				newChannel.mute = false;
-			}
-			else {
+
+			if(newChannel.mute === false){
 				newChannel.channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
 				newChannel.mute = true;
+
+				this.classList.add("active-mute");
 			}
+			else if (isSolo && newChannel.solo === false){
+
+				this.classList.toggle("active-mute");
+				return;
+			}
+			else{
+				newChannel.channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.noUiSlider.get()), audioCtx.currentTime);
+				newChannel.mute = false;
+
+				this.classList.remove("active-mute");
+			}
+
 		});
 
 		this.soloInput.addEventListener("click", function(){
@@ -295,6 +305,7 @@ function addChannel(index) {
 					}
 				}
 				this.classList.remove("active-solo");
+				newChannel.solo = false;
 			}
 			else {
 				for (var j = 0; j < channelCounter; j++) {
@@ -304,11 +315,12 @@ function addChannel(index) {
 				}
 				newChannel.channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.noUiSlider.get()), audioCtx.currentTime);
 				newChannel.mute = false;
+				newChannel.solo = true;
 				this.classList.add("active-solo");
 				newChannel.channelHTMLNode.muteInput.classList.remove("active-mute");
 			}
-
 			isSolo = !isSolo;
+
 		});
 
 		newChannel.channelHTMLNode.channelVolumeInput.noUiSlider.on('update', function (value) {
@@ -431,6 +443,7 @@ function setChannelProperties(channel, i) {
 	channel.preAmp = audioCtx.createGain();
 	channel.channelFader = audioCtx.createGain();
 	channel.mute = false;
+	channel.solo = false;
 	channel.channelFader.gain.value = 0;
 	channel.clipAnalyser = audioCtx.createAnalyser();
 	channel.clipAnalyser.fftSize = 1024;
