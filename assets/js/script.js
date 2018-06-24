@@ -6,7 +6,8 @@ var masterChannel = audioCtx.createGain();
 var maxChannels = 5;
 var channelCounter = 0, fullBoard = false;
 var busCounter = 0;
-var channels = [], sources = [], busses = [];
+var channels = [], busses = [];
+var isSolo = false;
 
 busses[0] = createNewBus();
 busses[1] = createNewBus();
@@ -82,7 +83,7 @@ delegateEvent(document, "click", "#filler", function(){
 	addChannel(channelCounter);
 
 	// $(".dial").knob();
-	
+
 	channels[channelCounter].channelHTMLNode.initListeners();
 	channelCounter++;	
 
@@ -91,9 +92,9 @@ delegateEvent(document, "click", "#filler", function(){
 
 function loadSound(arraybuffer, i) {
 	audioCtx.decodeAudioData(arraybuffer, function (buffer) {
-		sources[i].buffer = buffer;
-		sources[i].loop = true;
-		sources[i].connect(channels[i].preAmp);
+		channels[i].source.buffer = buffer;
+		channels[i].source.loop = true;
+		channels[i].source.connect(channels[i].preAmp);
 		channels[i].preAmp.connect(channels[i].hiEQControl);
 		channels[i].hiEQControl.connect(channels[i].hi_midEQControl);
 		channels[i].hi_midEQControl.connect(channels[i].loEQControl);
@@ -211,8 +212,6 @@ function addChannel(index) {
 	
 	newChannel.channelHTMLNode.requestPresetAudio = function (i) {
 
-		sources[i] = audioCtx.createBufferSource();
-
 		var request = new XMLHttpRequest();
 		request.open('GET', this.audioSource.options[this.audioSource.selectedIndex].value, true);
 
@@ -226,16 +225,15 @@ function addChannel(index) {
 		}
 
 		request.send();
-		sources[i].start(audioCtx.currentTime);
+		newChannel.source.start(audioCtx.currentTime);
 
 	};
 
 	newChannel.channelHTMLNode.initListeners = function() {
 		this.removeBtn.addEventListener("click",function(){
-			if (sources.length > 0 && sources[index] ) {
-				sources[index].stop();
-				delete sources[index];
-			}
+			
+				newChannel.source.stop();
+			
 			channels.splice(index, 1);
 			closestByClass(this, "channel").remove();
 			channelCounter--;
@@ -246,7 +244,7 @@ function addChannel(index) {
 			}
 		});
 		this.audioSource.addEventListener("change", function(){
-			if(sources[index]) sources[index].stop();
+			if(newChannel.source.buffer !== null) newChannel.source.stop();
 			if (this.value === "new_file") {
 				newChannel.channelHTMLNode.fileUploadOption.click();
 				this.value = "none";
@@ -261,10 +259,10 @@ function addChannel(index) {
 				var r = new FileReader();
 				r.readAsArrayBuffer(file);
 				r.onload = function (e) {
-					sources[index] = audioCtx.createBufferSource();
+					newChannel.source = audioCtx.createBufferSource();
 					loadSound(e.target.result, index);
 					newChannel.channelHTMLNode.resetChannelInputSettings(index);
-					sources[index].start(audioCtx.currentTime);
+					newChannel.source.start(audioCtx.currentTime);
 				};
 		});
 
@@ -272,16 +270,15 @@ function addChannel(index) {
 		// 	newChannel.panNode.pan.setValueAtTime(this.value, audioCtx.currentTime);
 		// });
 
-		this.muteInput.addEventListener("click", function(){
-			if (this.classList.contains("active-mute")) {
+		this.muteInput.addEventListener("click", function () {
+			this.classList.toggle("active-mute");
+			if (newChannel.mute === true && isSolo === false) {
 				newChannel.channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.noUiSlider.get()), audioCtx.currentTime);
 				newChannel.mute = false;
-				this.classList.remove("active-mute");
 			}
 			else {
 				newChannel.channelFader.gain.setValueAtTime(0, audioCtx.currentTime);
 				newChannel.mute = true;
-				this.classList.add("active-mute");
 			}
 		});
 
@@ -310,6 +307,8 @@ function addChannel(index) {
 				this.classList.add("active-solo");
 				newChannel.channelHTMLNode.muteInput.classList.remove("active-mute");
 			}
+
+			isSolo = !isSolo;
 		});
 
 		newChannel.channelHTMLNode.channelVolumeInput.noUiSlider.on('update', function (value) {
@@ -427,6 +426,7 @@ function addChannel(index) {
 }
 
 function setChannelProperties(channel, i) {
+	channel.source = audioCtx.createBufferSource();
 	channel.panNode = audioCtx.createStereoPanner();
 	channel.preAmp = audioCtx.createGain();
 	channel.channelFader = audioCtx.createGain();
