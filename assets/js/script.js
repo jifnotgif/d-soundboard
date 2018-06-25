@@ -2,7 +2,12 @@
 var AudioContext = window.AudioContext || window.webkitAudioContext;
 var audioCtx = new AudioContext();
 
+var recordBtn = document.getElementById("record").parentNode;
+var stopBtn = document.getElementById("stop").parentNode;
+var recorder;
+var recording;
 var masterChannel = audioCtx.createGain();
+var masterBufferNode = audioCtx.createScriptProcessor(2048,1,1);
 var maxChannels = 5;
 var channelCounter = 0, fullBoard = false;
 var busCounter = 0;
@@ -105,6 +110,7 @@ function loadSound(arraybuffer, i) {
 		channels[i].panNode.connect(channels[i].channelFader);
 
 		channels[i].channelFader.connect(masterChannel);
+		masterChannel.connect(masterBufferNode);
 		masterChannel.connect(audioCtx.destination);
 
 		channels[i].channelFader.connect(channels[i].splitter);
@@ -714,3 +720,31 @@ function delegateEvent(el, evt, sel, handler) {
 		}
 	});
 }
+
+recordBtn.onclick = function(){
+	//change css
+	console.log(this.classList);
+	this.classList.toggle("hide-btn");
+	stopBtn.classList.toggle("hide-btn");
+	recorder = new Recorder(masterChannel,{
+		'leaveStreamOpen':true,
+	});
+	recorder.record();
+}
+
+stopBtn.onclick = function(){
+	this.classList.toggle("hide-btn");
+	recordBtn.classList.toggle("hide-btn");
+	recorder.stop();
+
+	recorder.exportWAV(function (blob) {
+		var url = URL.createObjectURL(blob);
+		var anchor = document.getElementById("recording-link");
+		anchor.href = url;
+		anchor.download = 'mix_' + new Date().toISOString() + '.wav';
+		anchor.click();
+	});
+
+	recorder.clear();
+
+}   
