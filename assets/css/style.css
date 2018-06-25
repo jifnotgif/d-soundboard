@@ -247,3 +247,15 @@ h1{
 	height:inherit;
 }
 button:focus {outline:0;}
+
+.fa-circle{
+	color:red;
+}
+
+.hide-btn{
+	display:none;
+}
+
+#recording-link{
+	display:none;
+}
