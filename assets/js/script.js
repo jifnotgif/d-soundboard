@@ -95,28 +95,28 @@ delegateEvent(document, "click", "#filler", function(){
 
 });
 
-function loadSound(arraybuffer, i) {
+function loadSound(arraybuffer, channel) {
 	audioCtx.decodeAudioData(arraybuffer, function (buffer) {
-		channels[i].source.buffer = buffer;
-		channels[i].source.loop = true;
-		channels[i].source.connect(channels[i].preAmp);
-		channels[i].preAmp.connect(channels[i].hiEQControl);
-		channels[i].hiEQControl.connect(channels[i].hi_midEQControl);
-		channels[i].hi_midEQControl.connect(channels[i].loEQControl);
-		channels[i].loEQControl.connect(channels[i].lo_midEQControl);
+		channel.source.buffer = buffer;
+		channel.source.loop = true;
+		channel.source.connect(channel.preAmp);
+		channel.preAmp.connect(channel.hiEQControl);
+		channel.hiEQControl.connect(channel.hi_midEQControl);
+		channel.hi_midEQControl.connect(channel.loEQControl);
+		channel.loEQControl.connect(channel.lo_midEQControl);
 
 
-		channels[i].lo_midEQControl.connect(channels[i].panNode);
-		channels[i].panNode.connect(channels[i].channelFader);
+		channel.lo_midEQControl.connect(channel.panNode);
+		channel.panNode.connect(channel.channelFader);
 
-		channels[i].channelFader.connect(masterChannel);
+		channel.channelFader.connect(masterChannel);
 		masterChannel.connect(masterBufferNode);
 		masterChannel.connect(audioCtx.destination);
 
-		channels[i].channelFader.connect(channels[i].splitter);
-		channels[i].splitter.connect(channels[i].clipAnalyser, 0, 0);
-		channels[i].splitter.connect(channels[i].clipAnalyser2, 1, 0);
-		channels[i].javascriptNode.connect(channels[i].splitter);
+		channel.channelFader.connect(channel.splitter);
+		channel.splitter.connect(channel.clipAnalyser, 0, 0);
+		channel.splitter.connect(channel.clipAnalyser2, 1, 0);
+		channel.javascriptNode.connect(channel.splitter);
 
 	}, function (e) { console.log("Error with decoding audio data" + e.err); });
 
@@ -216,7 +216,7 @@ function addChannel(index) {
 	newChannel.channelHTMLNode.fileUploadOption = document.querySelectorAll(".filein")[index];
 	newChannel.channelHTMLNode.removeBtn = document.querySelectorAll(".fa-minus-square")[index];
 	
-	newChannel.channelHTMLNode.requestPresetAudio = function (i) {
+	newChannel.channelHTMLNode.requestPresetAudio = function () {
 
 		var request = new XMLHttpRequest();
 		request.open('GET', this.audioSource.options[this.audioSource.selectedIndex].value, true);
@@ -226,7 +226,7 @@ function addChannel(index) {
 
 		request.onload = function () {
 			var audioData = request.response;
-			loadSound(audioData, i);
+			loadSound(audioData, newChannel);
 			newChannel.channelHTMLNode.resetChannelInputSettings();
 		}
 
@@ -237,9 +237,7 @@ function addChannel(index) {
 
 	newChannel.channelHTMLNode.initListeners = function() {
 		this.removeBtn.addEventListener("click",function(){
-			
-				newChannel.source.stop();
-			
+			if (newChannel.source.buffer) newChannel.source.stop();
 			channels.splice(index, 1);
 			closestByClass(this, "channel").remove();
 			channelCounter--;
@@ -266,15 +264,11 @@ function addChannel(index) {
 				r.readAsArrayBuffer(file);
 				r.onload = function (e) {
 					newChannel.source = audioCtx.createBufferSource();
-					loadSound(e.target.result, index);
+					loadSound(e.target.result, newChannel);
 					newChannel.channelHTMLNode.resetChannelInputSettings(index);
 					newChannel.source.start(audioCtx.currentTime);
 				};
 		});
-
-		// this.panInput.addEventListener("input", function(){
-		// 	newChannel.panNode.pan.setValueAtTime(this.value, audioCtx.currentTime);
-		// });
 
 		this.muteInput.addEventListener("click", function () {
 
@@ -331,33 +325,8 @@ function addChannel(index) {
 
 		newChannel.channelHTMLNode.channelVolumeInput.noUiSlider.on('update', function (value) {
 			if(newChannel.mute === false) newChannel.channelFader.gain.setValueAtTime(dBFSToGain(value[0]), audioCtx.currentTime);
-		})
-		// this.channelVolumeInput.addEventListener("input", function(){
-		// 	if (newChannel.mute === false) newChannel.channelFader.gain.setValueAtTime(dBFSToGain(newChannel.channelHTMLNode.channelVolumeInput.value), audioCtx.currentTime);
-		// });
+		});
 
-		// this.initGainInput.addEventListener("input",function(){
-		// 	newChannel.preAmp.gain.setValueAtTime(dBFSToGain(this.value),audioCtx.currentTime);
-		// });
-
-		// this.hiEQ.addEventListener("input",function(){
-		// 	newChannel.hiEQControl.gain.setValueAtTime(this.value, audioCtx.currentTime);
-		// });
-		// this.loEQ.addEventListener("input", function () {
-		// 	newChannel.loEQControl.gain.setValueAtTime(this.value, audioCtx.currentTime);
-		// });
-		// this.hi_midFreq.addEventListener("input",function(){
-		// 	newChannel.hi_midEQControl.frequency.value = this.value;
-		// });
-		// this.hi_midBoost.addEventListener("input",function(){
-		// 	newChannel.hi_midEQControl.gain.setValueAtTime(this.value, audioCtx.currentTime);
-		// });
-		// this.lo_midFreq.addEventListener("input", function () {
-		// 	newChannel.lo_midEQControl.frequency.value = this.value;
-		// });
-		// this.lo_midBoost.addEventListener("input", function () {
-		// 	newChannel.lo_midEQControl.gain.setValueAtTime(this.value, audioCtx.currentTime);
-		// });
 		// for each button in channel send
 		for(var k =0; k< newChannel.channelHTMLNode.busGroups.elements.length; k++){
 			this.busGroups.elements[k].addEventListener("click", function(){
@@ -579,79 +548,6 @@ function setNonChannelListeners() {
 	masterVolumeIn.noUiSlider.on('update', function (value) {
 		masterChannel.gain.setValueAtTime(dBFSToGain(value[0]), audioCtx.currentTime);
 	});
-
-	
-	// masterVolumeIn.addEventListener("input", function () {
-	// 	masterChannel.gain.setValueAtTime(dBFSToGain(masterVolumeIn.value),audioCtx.currentTime);
-	// });
-
-	// busGroups.forEach(function (input, index) {
-	// 	for (var i = 0; i < input.elements.length; i++) {
-
-	// 		delegateEvent(document, "click", ".busOption", function () {
-	// 			resetChanneltoBusConnection(index);
-	// 			if (this.value === "1-2 send") {
-	// 				busses[1].merger.disconnect();
-
-	// 				channels[index].splitter.connect(busses[0].leftGain, 0, 0);
-	// 				channels[index].splitter.connect(busses[0].rightGain, 1, 0);
-	// 				setBusToMain(0);
-	// 			}
-	// 			else if (this.value === "3-4 send") {
-	// 				busses[0].merger.disconnect();
-
-	// 				channels[index].splitter.connect(busses[1].leftGain, 0, 0);
-	// 				channels[index].splitter.connect(busses[1].rightGain, 1, 0);
-
-	// 				setBusToMain(1);
-	// 			}
-	// 			else {
-	// 				channels[index].channelFader.connect(masterChannel);
-	// 			}
-	// 		});
-
-			// input.elements[i].addEventListener("click", function () {
-			// 	resetChanneltoBusConnection(index);
-			// 	if (this.value === "1-2 send") {
-			// 		busses[1].merger.disconnect();
-
-			// 		channels[index].splitter.connect(busses[0].leftGain, 0, 0);
-			// 		channels[index].splitter.connect(busses[0].rightGain, 1, 0);
-			// 		setBusToMain(0);
-			// 	}
-			// 	else if (this.value === "3-4 send") {
-			// 		busses[0].merger.disconnect();
-
-			// 		channels[index].splitter.connect(busses[1].leftGain, 0, 0);
-			// 		channels[index].splitter.connect(busses[1].rightGain, 1, 0);
-
-			// 		setBusToMain(1);
-			// 	}
-			// 	else {
-			// 		channels[index].channelFader.connect(masterChannel);
-			// 	}
-			// });
-	// 	}
-	// });
-
-	// if busses are dynamically added/removed, add event listeners through delegateEvent()
-
-	// busPanIn.forEach(function (input, i) {
-	// 	input.addEventListener("input", function () {
-	// 		busses[i].busPan.pan.setValueAtTime(input.value, audioCtx.currentTime);
-	// 	});
-	// });
-
-	// busLeftVolumeIn.forEach(function (input, i) {
-	// 	input.addEventListener("input", function () {
-	// 		busses[i].leftGain.gain.setValueAtTime(dBFSToGain(busLeftVolumeIn[i].value),audioCtx.currentTime);
-	// 	});
-	// });
-	// busRightVolumeIn.forEach(function (input, i) {
-	// 	input.addEventListener("input", function () {
-	// 		busses[i].rightGain.gain.setValueAtTime(dBFSToGain(busRightVolumeIn[i].value), audioCtx.currentTime);
-	// 	});
-	// });
 }
 
 /*
@@ -722,10 +618,9 @@ function delegateEvent(el, evt, sel, handler) {
 }
 
 recordBtn.onclick = function(){
-	//change css
-	console.log(this.classList);
 	this.classList.toggle("hide-btn");
 	stopBtn.classList.toggle("hide-btn");
+
 	recorder = new Recorder(masterChannel,{
 		'leaveStreamOpen':true,
 	});
@@ -735,8 +630,8 @@ recordBtn.onclick = function(){
 stopBtn.onclick = function(){
 	this.classList.toggle("hide-btn");
 	recordBtn.classList.toggle("hide-btn");
-	recorder.stop();
 
+	recorder.stop();
 	recorder.exportWAV(function (blob) {
 		var url = URL.createObjectURL(blob);
 		var anchor = document.getElementById("recording-link");
