@@ -62,7 +62,7 @@ for (var i = 0; i < busses.length; i++) {
 			'max': 10,
 		}
 	});
-} 
+}
 
 // code breaks if abstracted to loop. make unique event listeners for each bus.
 busListenerFunctions(0);
@@ -90,7 +90,7 @@ delegateEvent(document, "click", "#filler", function(){
 	// $(".dial").knob();
 
 	channels[channelCounter].channelHTMLNode.initListeners();
-	channelCounter++;	
+	channelCounter++;
 
 
 });
@@ -137,7 +137,7 @@ function addChannel(index) {
 				newChannel.preAmp.gain.setValueAtTime(dBFSToGain(value), audioCtx.currentTime);
 			}
 		});
-	
+
 
 
 	newChannel.channelHTMLNode.hiEQ = $(".high-gain").eq(index).knob(
@@ -171,14 +171,14 @@ function addChannel(index) {
 				newChannel.lo_midEQControl.frequency.value = value;
 			}
 		});
-		
+
 	newChannel.channelHTMLNode.lo_midBoost = $(".lm-boost-gain").eq(index).knob(
 		{
 			'change': function (value) {
 				newChannel.lo_midEQControl.gain.setValueAtTime(value, audioCtx.currentTime);
 			}
 		});
-	
+
 
 	// newChannel.channelHTMLNode.panInput = document.querySelectorAll(".pan")[index];
 	newChannel.channelHTMLNode.panInput = $(".channel-pan").eq(index).knob(
@@ -189,10 +189,10 @@ function addChannel(index) {
 		});
 	newChannel.channelHTMLNode.muteInput = document.querySelectorAll(".mute")[index];
 	newChannel.channelHTMLNode.soloInput = document.querySelectorAll(".solo")[index];
-	
+
 	var slider = document.getElementsByClassName("sliders")[channelCounter];
 	newChannel.channelHTMLNode.channelVolumeInput = slider;
-	
+
 	noUiSlider.create(slider, {
 		start: [-100],
 		connect: [true, true],
@@ -215,7 +215,7 @@ function addChannel(index) {
 	newChannel.channelHTMLNode.busGroups = document.querySelectorAll("fieldset")[index];
 	newChannel.channelHTMLNode.fileUploadOption = document.querySelectorAll(".filein")[index];
 	newChannel.channelHTMLNode.removeBtn = document.querySelectorAll(".fa-minus-square")[index];
-	
+
 	newChannel.channelHTMLNode.requestPresetAudio = function () {
 
 		var request = new XMLHttpRequest();
@@ -225,13 +225,14 @@ function addChannel(index) {
 
 
 		request.onload = function () {
+			newChannel.source = audioCtx.createBufferSource();
 			var audioData = request.response;
 			loadSound(audioData, newChannel);
 			newChannel.channelHTMLNode.resetChannelInputSettings();
+			newChannel.source.start(audioCtx.currentTime);
 		}
 
 		request.send();
-		newChannel.source.start(audioCtx.currentTime);
 
 	};
 
@@ -384,7 +385,7 @@ function addChannel(index) {
 		$(".hm-boost-gain").eq(index).val("0");
 		$(".hm-boost-gain").eq(index).trigger("change");
 		newChannel.hi_midEQControl.gain.setValueAtTime(0, audioCtx.currentTime);
-		
+
 		this.lo_midFreq.value = 990;
 
 		$(".lm-freq-gain").eq(index).val("990");
@@ -484,7 +485,7 @@ function setChannelProperties(channel, i) {
 
 	channel.array;
 	channel.array2;
-	
+
 }
 
 
@@ -642,4 +643,4 @@ stopBtn.onclick = function(){
 
 	recorder.clear();
 
-}   
+}
